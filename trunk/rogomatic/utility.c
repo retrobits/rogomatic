@@ -11,9 +11,12 @@
 
 # include <sgtty.h>
 # include <stdio.h>
+# include <stdlib.h>
 # include <signal.h>
+# include <string.h>
 # include <sys/types.h>
 # include <sys/stat.h>
+# include <pwd.h>
 
 # include "install.h"
 
@@ -30,7 +33,7 @@
  * baudrate: Determine the baud rate of the terminal
  */
 
-baudrate ()
+rogo_baudrate ()
 { static short  baud_convert[] =
   { 0, 50, 75, 110, 135, 150, 200, 300, 600, 1200, 1800, 2400, 4800, 9600 };
   static struct sgttyb  sg;
@@ -51,13 +54,15 @@ baudrate ()
 char *getname ()
 { static char name[100];
   int   i;
+  struct passwd *passwd;
 
-
-  getpw (getuid (), name);
-  i = 0;
-  while (name[i] != ':' && name[i] != ',')
-    i++;
-  name[i] = '\0';
+  passwd = getpwuid (getuid ());
+  strncpy (name, passwd->pw_name, 100);
+//  getpw (getuid (), name);
+//  i = 0;
+//  while (name[i] != ':' && name[i] != ',')
+//    i++;
+//  name[i] = '\0';
 
   return (name);
 }
@@ -107,14 +112,15 @@ char *f;
  * critical: Disable interrupts
  */
 
-static int   (*hstat)(), (*istat)(), (*qstat)(), (*pstat)();
+static void   (*hstat)(int), (*istat)(int), (*qstat)(int), (*pstat)(int);
 
 critical ()
 {
-  hstat = signal (SIGHUP, SIG_IGN);
-  istat = signal (SIGINT, SIG_IGN);
-  pstat = signal (SIGPIPE, SIG_IGN);
-  qstat = signal (SIGQUIT, SIG_IGN);
+// FIXME: when uncommented, get bus errors :(
+//  hstat = signal (SIGHUP, SIG_IGN);
+//  istat = signal (SIGINT, SIG_IGN);
+//  pstat = signal (SIGPIPE, SIG_IGN);
+//  qstat = signal (SIGQUIT, SIG_IGN);
 }
 
 /*
@@ -123,10 +129,11 @@ critical ()
 
 uncritical ()
 {
-  signal (SIGHUP, hstat);
-  signal (SIGINT, istat);
-  signal (SIGPIPE, pstat);
-  signal (SIGQUIT, qstat);
+// FIXME: when uncommented, get bus errors :(
+//  signal (SIGHUP, hstat);
+//  signal (SIGINT, istat);
+//  signal (SIGPIPE, pstat);
+//  signal (SIGQUIT, qstat);
 }
 
 /*
@@ -146,7 +153,7 @@ reset_int ()
  */
 
 int_exit (exitproc)
-int (*exitproc)();
+void (*exitproc)(int);
 {
   if (signal (SIGHUP, SIG_IGN) != SIG_IGN)  signal (SIGHUP, exitproc);
   if (signal (SIGINT, SIG_IGN) != SIG_IGN)  signal (SIGINT, exitproc);
@@ -166,7 +173,7 @@ char *lokfil;
 int maxtime;
 { int try;
   struct stat statbuf;
-  long time ();
+  time_t time ();
 
   start:
   if (creat (lokfil, NOWRITE) > 0)
@@ -183,7 +190,7 @@ int maxtime;
     return TRUE;
   }
 
-  if (time (0) - statbuf.st_mtime > maxtime)
+  if (time (NULL) - statbuf.st_mtime > maxtime)
   { if (unlink (lokfil) < 0)
       return FALSE;
     goto start;
@@ -283,8 +290,8 @@ char *small, *big;
 
 #define EXTRASIZE 5		/* increment to add to env. size */
 
-char *index (), *malloc (), *realloc ();
-int   strlen ();
+//char *index (), *malloc (), *realloc (); 
+//int   strlen ();
 
 static int  envsize = -1;	/* current size of environment */
 extern char **environ;		/* the global which is your env. */
@@ -293,7 +300,7 @@ static int  findenv ();		/* look for a name in the env. */
 static int  newenv ();		/* copy env. from stack to heap */
 static int  moreenv ();		/* incr. size of env. */
 
-int   putenv (name, value)
+int  rogo_putenv (name, value)
 char *name, *value;
 { register int  i, j;
   register char *p;

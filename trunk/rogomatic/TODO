@@ -1,0 +1,4 @@
+Bugs
+----
+Fix Monster next to character at start bug, reproduciable with
+% SEED=1208982897 ./rogomatic

@@ -7,6 +7,9 @@
 
 # include <curses.h>
 # include <ctype.h>
+# include <string.h>
+# include <stdlib.h>
+# include <sys/ioctl.h>
 
 # include "install.h"
 
@@ -19,6 +22,7 @@
 # include "types.h"
 # include "globals.h"
 # include "termtokens.h"
+# include "getroguetoken.h"
 
 # define READ	0
 
@@ -26,7 +30,7 @@
  * Charonscreen returns the current character on the screen (using
  * curses(3)).  This macro is based on the winch(win) macro.
  */
-# define charonscreen(X,Y)	(stdscr->_y[X][Y])
+# define charonscreen(Y,X)	(A_CHARTEXT & mvwinch (stdscr, Y, X))
 
 char *month[] = 
 { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -42,6 +46,81 @@ static char screen00 = ' ';
 
 char  queue[SENDQ];             /* To Rogue */
 int   head = 0, tail = 0;
+
+int s_row1 = -100;  /* start scroll regions way out of bounds */
+int s_row2 = 100;   /* start scroll regions way out of bounds */
+
+void
+scrollup (void)
+{
+  int r;
+  int c;
+  for (r = s_row1; r < s_row2; r++)
+    {
+      for (c = 0; c < 80; c++)
+        {
+          screen[r][c] = screen[r+1][c];
+          updatepos (screen[r][c], r, c);
+        }
+    }
+  for (c = 0; c < 80; c++)
+    {
+      screen[s_row2][c] = ' ';
+      updatepos (screen[s_row2][c], s_row2, c);
+    }
+}
+
+void
+scrolldown (void)
+{
+  int r;
+  int c;
+  for (r = s_row2; r > s_row1; r--)
+    {
+      for (c = 0; c < 80; c++)
+        {
+          screen[r][c] = screen[r-1][c];
+          updatepos (screen[r][c], r, c);
+        }
+    }
+  for (c = 0; c < 80; c++)
+    {
+      screen[s_row1][c] = ' ';
+      updatepos (screen[s_row1][c], s_row1, c);
+    }
+}
+
+void
+printscreen (void)
+{
+  int i, j;
+  debuglog ("-- cursor  [%2d, %2d] [%c] [%3d] -------------------------------------------------\n", row, col, screen[row][col], screen[row][col]);
+  debuglog ("             1111111111222222222233333333334444444444555555555566666666667777777777\n");
+  debuglog ("   01234567890123456789012345678901234567890123456789012345678901234567890123456789\n");
+
+  for (i=0; i < 24; ++i)
+    {
+      debuglog ("%02d",(i));
+      if (i >= s_row1 && i <= s_row2)
+        {
+          debuglog ("*");
+        }
+      else
+        {
+          debuglog (" ");
+        }
+
+      for (j = 0; j < 80; ++j)
+        {
+          if (i == row && j == col)
+            debuglog ("_");
+          else
+            debuglog ("%c", screen[i][j]);
+        }
+      debuglog ("\n");
+    }
+  debuglog ("--------------------------------------------------------------------------------\n");
+}
 
 /*
  * Getrogue: Sensory interface.
@@ -61,8 +140,8 @@ int   onat;                             /* 0 ==> Wait for waitstr
                                            we eat a --More-- message */
 { int   botprinted = 0, wasmapped = didreadmap, r, c, pending ();
   register int i, j;
-  char  *s, *m, *q, *d, *call;
-  int *doors, ch, getroguetoken();
+  char  ch, *s, *m, *q, *d, *call;
+  int *doors;
   static moved = 0;
 
   newdoors = doorlist;			/* no new doors found yet */
@@ -73,19 +152,25 @@ int   onat;                             /* 0 ==> Wait for waitstr
   q = "(* for list): ";			/* FSM to check for prompt */
   d = ")______";			/* FSM to check for tombstone grass */
 
+  debuglog ("getrogue : 1\n");
   if (moved)				/* If we moved last time, put any */
   { sleepmonster (); moved = 0; }	/* Old monsters to sleep */
 
+  debuglog ("getrogue : 2\n");
   /* While we have not reached the end of the Rogue input, read */
   /* characters from Rogue and figure out what they mean.       */
   while ((*s) ||
          ((!hasted || version != RV36A) && onat && screen[row][col] != '@'))
-  { ch = getroguetoken ();
+  {
+    debuglog ("getrogue : 3\n");
+    ch = getroguetoken ();
 
+    debuglog ("getrogue : 4\n");
     /* If message ends in "(* for list): ", call terpmes */
     if (ch == *q) { if (*++q == 0) terpmes (); }
     else q = "(* for list): ";
 
+    debuglog ("getrogue : 5\n");
     /* Rogomatic now keys off of the grass under the Tombstone to  */
     /* detect that it has been killed. This was done because the   */
     /* "Press return" prompt only happens if there is a score file */
@@ -94,6 +179,7 @@ int   onat;                             /* 0 ==> Wait for waitstr
     if (ch == *d) { if (0 == *++d) { addch (ch); deadrogue (); return;} }
     else d = ")_______";
 
+    debuglog ("getrogue : 6\n");
     /* If the message has a more, strip it off and call terpmes */
     if (ch == *m)
     { if (*++m == 0)
@@ -120,6 +206,7 @@ int   onat;                             /* 0 ==> Wait for waitstr
     }
     else m = "More--";
 
+    debuglog ("getrogue : 7\n");
     /* If the message is 'Call it:', cancel the request */
     if (ch == *call)
     { if (*++call == 0)
@@ -130,13 +217,25 @@ int   onat;                             /* 0 ==> Wait for waitstr
     }
     else call = "Call it:";
 
+    debuglog ("getrogue : 8\n");
     /* Check to see whether we have read the synchronization string */
     if (*s) { if (ch == *s) s++; else s = waitstr; }
 
+    debuglog ("getrogue : 9\n");
     /* Now figure out what the token means */
     switch (ch)
     { case BS_TOK: 
         col--;
+        debuglog ("BS_TOK      [%2d, %2d] [%c]\n", row, col, screen[row][col]);
+        break;
+
+      case CB_TOK:
+        for (i =0; i < col; i++)
+          {
+            updatepos (' ', row, i);
+            screen[row][i] = ' ';
+          }
+        debuglog ("CB_TOK      [%2d, %2d] [%c]\n", row, col, screen[row][col]);
         break;
 
       case CE_TOK: 
@@ -151,51 +250,78 @@ int   onat;                             /* 0 ==> Wait for waitstr
 
         if (row) { at (row, col); clrtoeol (); }
         else if (col == 0) screen00 = ' ';
+        debuglog ("CE_TOK      [%2d, %2d] [%c]\n", row, col, screen[row][col]);
+        break;
+
+      case CH_TOK:
+        debuglog ("CH_TOK [%d, %d] [%d, %d]\n",number1, number2, row, col);
+        s_row1 = number1-1;
+        s_row2 = number2-1;
+        debuglog ("CH_TOK scroll region %d - %d\n",s_row1, s_row2);
         break;
 
       case CL_TOK: 
         clearscreen ();
+        row = 0;
+        col = 0;
+        debuglog ("CL_TOK [%d, %d]\n", row, col);
         break;
 
       case CM_TOK: 
         screen00 = screen[0][0];
+        row = number1 - 1;
+        col = number2 - 1;
+        debuglog ("CM_TOK      [%2d, %2d] [%c]\n", row, col, screen[row][col]);
         break;
 
       case CR_TOK: 
 	/* Handle missing '--more--' between inventories  MLM 24-Jun-83 */
-	if (row==0 && screen[0][1]==')' && screen[0][col-1] != '-')
-          terpmes ();
+        /* --more-- doesn't seem too be missing anymore NYM 3/29/08
+         * if (row==0 && screen[0][1]==')' && screen[0][col-1] != '-')
+         *   terpmes ();
+         */
         col = 0;
+        debuglog ("CR_TOK      [%2d, %2d] [%c]\n", row, col, screen[row][col]);
         break;
 
-      case DO_TOK:
-        row++;
-        break;
+//      case DO_TOK:
+//        row++;
+//        debuglog ("DO_TOK      [%2d, %2d] [%c]\n", row, col, screen[row][col]);
+//        break;
 
       case ER_TOK: 
         break;
 
       case LF_TOK:
         row++;
-        col = 0;
+        debuglog ("LF_TOK      check for scroll %d > %d\n",row, s_row2);
+        if (row > s_row2)
+          {
+            scrollup ();
+          }
+        debuglog ("LF_TOK      [%2d, %2d] [%c]\n", row, col, screen[row][col]);
         break;
 
       case ND_TOK:
-        col++;
+        row += number1;
+        debuglog ("ND_TOK [%2d] [%2d, %2d] [%c]\n", number1, row, col, screen[row][col]);
         break;
 
       case SE_TOK: 
+        debuglog ("SE_TOK\n");
         revvideo = 0;
 	standend ();
         break;
 
       case SO_TOK: 
+        debuglog ("SO_TOK\n");
         revvideo = 1;
 	standout ();
         break;
 
       case TA_TOK: 
         col = 8 * (1 + col / 8);
+        debuglog ("TA_TOK      [%2d, %2d] [%c]\n", row, col, screen[row][col]);
         break;
 
       case EOF:
@@ -207,6 +333,42 @@ int   onat;                             /* 0 ==> Wait for waitstr
 
       case UP_TOK:
         row--;
+        debuglog ("UP_TOK      [%2d, %2d] [%c]\n", row, col,screen[row][col]);
+        break;
+
+      case HM_TOK:
+        col = 0;
+        row = 0;
+        debuglog ("HM_TOK      [%2d, %2d] [%c]\n", row, col, screen[row][col]);
+        break;
+
+      case NU_TOK:
+        row -= number1;
+        debuglog ("NU_TOK [%2d] [%2d, %2d] [%c]\n", number1, row, col, screen[row][col]);
+        break;
+
+      case NR_TOK:
+        col += number1;
+        debuglog ("NR_TOK [%2d] [%2d, %2d] [%c]\n", number1, row, col, screen[row][col]);
+        break;
+
+      case NL_TOK:
+        debuglog ("NL_TOK\n");
+        col -= number1;
+        debuglog ("NL_TOK [%2d] [%2d, %2d] [%c]\n", number1, row, col, screen[row][col]);
+        break;
+
+      case SC_TOK:
+        debuglog ("SC_TOK      [%2d, %2d]\n", row, col);
+        break;
+
+      case RC_TOK:
+        debuglog ("RC_TOK      [%2d, %2d]\n", row, col);
+        break;
+
+      case SR_TOK:
+        debuglog ("SR_TOK      [%2d, %2d]\n", row, col);
+        scrolldown ();
         break;
 
       default: 
@@ -228,12 +390,17 @@ int   onat;                             /* 0 ==> Wait for waitstr
           screen[0][0] = 'I';
         }
         screen[row][col++] = ch;
+        debuglog ("OTHER   [%c] [%2d, %2d] [%c]\n", ch, row, (col-1), screen[row][col-1]);
         break;
     }
+
+    debuglog ("getrogue : 10 : usesynch = %d\n",usesynch);
   }
 
+  debuglog ("getrogue : 11\n");
   if (botprinted) terpbot ();
 
+  debuglog ("getrogue : 12\n");
   if (atrow != atrow0 || atcol != atcol0) 
   { updateat ();	/* Changed position, record the move */
     moved = 1;		/* Indicate that we moved */
@@ -241,15 +408,20 @@ int   onat;                             /* 0 ==> Wait for waitstr
     currentrectangle();	/* Keep current rectangle up to date.   LGCH */
   }
 
+  debuglog ("getrogue : 13\n");
   if (!usesynch && !pending ()) 
-  { usesynch = 1;
+  {
+    debuglog ("io : getrogue : usesynch = 1\n");
+    usesynch = 1;
     lastobj = NONE;
     resetinv();
   }
 
+  debuglog ("getrogue : 14\n");
   if (version < RV53A && checkrange && !pending ())
   { command (T_OTHER, "Iz"); checkrange = 0; }
  
+  debuglog ("getrogue : 15\n");
   /* If mapping status has changed */
   if (wasmapped != didreadmap)
   { dwait (D_CONTROL | D_SEARCH, "wasmapped: %d   didreadmap: %d",
@@ -258,6 +430,7 @@ int   onat;                             /* 0 ==> Wait for waitstr
     mapinfer ();
   }
 
+  debuglog ("getrogue : 16\n");
   if (didreadmap != Level)
   { doors = doorlist;
     while (doors != newdoors)
@@ -267,6 +440,7 @@ int   onat;                             /* 0 ==> Wait for waitstr
     }
   }
 
+  debuglog ("getrogue : 17\n");
   if (!blinded)
     for (i = atrow-1; i <= atrow+1; i++)         /* For blanks around the  */
       for (j = atcol-1; j <= atcol+1; j++)       /* rogue...               */
@@ -275,8 +449,14 @@ int   onat;                             /* 0 ==> Wait for waitstr
 	  setnewgoal ();		         /* invalidate the map.    */
 	}
 
+  debuglog ("getrogue : 18\n");
   at (row, col); 
   if (!emacs && !terse) refresh ();
+
+  debuglog ("getrogue : 19\n");
+  printscreen ();
+
+  debuglog ("getrogue : 20\n");
 }
 
 /*
@@ -345,7 +525,7 @@ terpbot ()
     sprintf (modeline, "Rgm %d: Id%d L%d %d %d(%d) s%d a%d e%d    ",
              rogpid, geneid, Level, Gold, Hp, Hpmax, Str / 100, 10-Ac, Explev);
     modeline[arglen-1] = '\0';
-    strcpy (parmstr, modeline);    
+    strncpy (parmstr, modeline,256);    
 
     /* Handle Emacs and Terse mode */
     if (emacs || terse)
@@ -419,7 +599,7 @@ char *f;
 int a1, a2, a3, a4;
 { char cmd[128];
   register char *s = cmd;
-  
+
   sprintf (cmd, f, a1, a2, a3, a4);
 
   while (*s) sendcnow (*s++);
@@ -431,7 +611,7 @@ int a1, a2, a3, a4;
  */
 
 sendcnow (c)
-int c;
+char c;
 { if (replaying) return;
   if (logging)
   { if (cecho)
@@ -450,7 +630,7 @@ int c;
 # define bump(p,sizeq) (p)=((p)+1)%sizeq
 
 /* VARARGS1 */
-send (f, a1, a2, a3, a4)
+rogo_send (f, a1, a2, a3, a4)
 char *f;
 int a1, a2, a3, a4;
 { char cmd[128];
@@ -458,6 +638,7 @@ int a1, a2, a3, a4;
 
   sprintf (s, f, a1, a2, a3, a4);
 
+  debuglog ("rogo_send (%s)\n",s);
   for (; *s; bump (tail, SENDQ))
     queue[tail] = *(s++);
 
@@ -493,69 +674,6 @@ resend ()
 pending ()
 { return (head != tail);
 } 
-
-/*
- * getroguetoken: get a command from Rogue (either a character or a
- * cursor motion sequence).
- */
-
-int getroguetoken ()
-{ int ch;
-  int getlogtoken();
-
-  if (replaying)
-    return (getlogtoken());
-
-  ch = GETROGUECHAR;
-
-  /* Convert escape sequences into tokens (negative numbers) */
-  if (ch == ESC)
-  { switch (ch = GETROGUECHAR)
-
-    { case CE_CHR: ch = CE_TOK; break;
-      case CL_CHR: ch = CL_TOK; break;
-      case CM_CHR: ch = CM_TOK; break;
-      case DO_CHR: ch = DO_TOK; break;
-      case ND_CHR: ch = ND_TOK; break;
-      case SE_CHR: ch = SE_TOK; break;
-      case SO_CHR: ch = SO_TOK; break;
-      case UP_CHR: ch = UP_TOK; break;
-      default: saynow ("Unknown sequence ESC-%s --More--", unctrl(ch));
-               waitforspace ();
-               ch = ER_TOK;
-    }
-  }
-
-  /* Get arguments for cursor addressing */
-  if ((int) ch == CM_TOK)
-  { row = (int) GETROGUECHAR - 32; col = (int) GETROGUECHAR - 32; }
-
-  /* Log the tokens */
-  if (logging)
-  { if (!cecho) { fprintf (fecho, "\"\nR: "); cecho = !cecho; }
-    if (ISPRT (ch)) fprintf (fecho, "%c", ch);
-    else switch (ch)
-    { case BS_TOK: fprintf (fecho, "{bs}");                   break;
-      case CE_TOK: fprintf (fecho, "{ce}");                   break;
-      case CL_TOK: fprintf (fecho, "{ff}");                   break;
-      case CM_TOK: fprintf (fecho, "{cm(%d,%d)}", row, col);  break;
-      case CR_TOK: fprintf (fecho, "{cr}");                   break;
-      case DO_TOK: fprintf (fecho, "{do}");                   break;
-      case LF_TOK: fprintf (fecho, "{nl}");                   break;
-      case ND_TOK: fprintf (fecho, "{nd}");                   break;
-      case SE_TOK: fprintf (fecho, "{se}");                   break;
-      case SO_TOK: fprintf (fecho, "{so}");                   break;
-      case TA_TOK: fprintf (fecho, "{ta}");                   break;
-      case UP_TOK: fprintf (fecho, "{up}");                   break;
-      case ER_TOK: fprintf (fecho, "{ERRESC}", ch);           break;
-      default:     fprintf (fecho, "{ERR%o}", ch);
-                   ch = ER_TOK;
-    }
-    fflush (fecho);
-  }
-  
-  return (ch);
-}
 
 /*
  * at: move the cursor. Now just a call to move();
@@ -826,9 +944,12 @@ getrogver ()
     *--vstr = '\0';
   }
 
+  debuglog ("versionstr = %s\n", versionstr);
+
   if (stlmatch (versionstr, "3.6"))		version = RV36B;
   else if (stlmatch (versionstr, "5.2"))	version = RV52A;
   else if (stlmatch (versionstr, "5.3"))	version = RV53A;
+  else if (stlmatch (versionstr, "5.4"))	version = RV54A;
   else saynow ("What a strange version of Rogue! ");
 }
 
@@ -843,9 +964,9 @@ charsavail ()
   int retc;
   
   if (retc = ioctl (READ, FIONREAD, &n))
-  { saynow ("Ioctl returns %d, n=%ld.\n", retc, n);
-    n=0;
-  }
+    { saynow ("Ioctl returns %d, n=%ld.\n", retc, n);
+      n=0;
+    }
 
   if (n > 0) noterm = 0;
   return ((int) n);
@@ -989,65 +1110,120 @@ int getlogtoken()
   int ch1, ch2, dig;
 
   while (ch == NEWLINE)
-  { acceptline = 0;
-    if ((ch = GETLOGCHAR) == 'R')
-      if ((ch = GETLOGCHAR) == ':')
-	if ((ch = GETLOGCHAR) == ' ')
-	{ ch = GETLOGCHAR;
-	  acceptline = 1;
-	}
-    if (!acceptline)
-      while ((int) ch != NEWLINE && (int) ch != EOF)
-	ch = GETLOGCHAR;
-  }
-  
-  if (ch == '{')
-  { ch1 = GETLOGCHAR;
-    ch2 = GETLOGCHAR;
-    ch = GETLOGCHAR;   /* Ignore the closing '}' */
-    switch (ch1)
-    { case 'b': ch = BS_TOK; break;
-      case 'c':
-	switch (ch2)
-	{ case 'e': ch = CE_TOK; break;
-	  case 'm':
-	    ch = CM_TOK;
-	    row = 0;
-	    while ((dig = GETLOGCHAR) != ',')
-	    { row = row * 10 + dig - '0';
-	    }
-	    col = 0;
-	    while ((dig = GETLOGCHAR) != ')')
-	    { col = col * 10 + dig - '0'; }
-	    GETLOGCHAR;		/* Ignore '}' */
-	    break;
-	  case 'r': ch = CR_TOK;
-	}
-	break;
-      case 'd': ch = DO_TOK; break;
-      case 'f': ch = CL_TOK; break;
-
-      case 'n':
-	if (ch2 == 'l')
-	  ch = LF_TOK;
-	else
-	  ch = ND_TOK;
-	break;
-      case 's':
-	if (ch2 == 'e')
-	  ch = SE_TOK;
-	else
-	  ch = SO_TOK;
-	break;
-      case 't': ch = TA_TOK; break;
-      case 'u': ch = UP_TOK; break;
-      case 'E':
-	while (GETLOGCHAR != '}')
-	  ;
-	ch = ER_TOK;
-	break;
+    { acceptline = 0;
+      if ((ch = GETLOGCHAR) == 'R')
+        if ((ch = GETLOGCHAR) == ':')
+          if ((ch = GETLOGCHAR) == ' ')
+            { ch = GETLOGCHAR;
+              acceptline = 1;
+            }
+      if (!acceptline)
+        while ((int) ch != NEWLINE && (int) ch != EOF)
+          ch = GETLOGCHAR;
     }
-  }
+
+  if (ch == '{')
+    { ch1 = GETLOGCHAR;
+      ch2 = GETLOGCHAR;
+      ch = GETLOGCHAR;   /* Ignore the closing '}' */
+      debuglog ("getlogtoken : {%c%c%c\n", ch1, ch2, ch);
+      switch (ch1)
+        {
+          case 'b': ch = BS_TOK; break;
+          case 'c':
+            switch (ch2)
+              {
+                case 'e': ch = CE_TOK; break;
+                case 'm':
+                  ch = CM_TOK;
+                  number1 = 0;
+                  while ((dig = GETLOGCHAR) != ',')
+                    { number1 = number1 * 10 + dig - '0';
+                    }
+                  number2 = 0;
+                  while ((dig = GETLOGCHAR) != ')')
+                    { number2 = number2 * 10 + dig - '0'; }
+                  GETLOGCHAR;		/* Ignore '}' */
+                  break;
+                case 'r': ch = CR_TOK; break;
+                case 'h':
+                  ch = CH_TOK;
+                  number1 = 0;
+                  while ((dig = GETLOGCHAR) != ',')
+                    { number1 = number1 * 10 + dig - '0';
+                    }
+                  number2 = 0;
+                  while ((dig = GETLOGCHAR) != ')')
+                    { number2 = number2 * 10 + dig - '0'; }
+                  GETLOGCHAR;		/* Ignore '}' */
+                  break;
+                case 'b': ch = CB_TOK; break;
+              }
+            break;
+            //      case 'd': ch = DO_TOK; break;
+          case 'f': ch = CL_TOK; break;
+          case 'h': ch = HM_TOK; break;
+          case 'l': ch = LF_TOK; break;
+          case 'n':
+            switch (ch2)
+              {
+                case 'd':
+                  ch = ND_TOK;
+                  number1 = 0;
+                  while ((dig = GETLOGCHAR) != ')')
+                    { number1 = number1 * 10 + dig - '0';
+                    }
+                  GETLOGCHAR;		/* Ignore '}' */
+                  break;
+                case 'u':
+                  ch = NU_TOK;
+                  number1 = 0;
+                  while ((dig = GETLOGCHAR) != ')')
+                    { number1 = number1 * 10 + dig - '0';
+                    }
+                  GETLOGCHAR;		/* Ignore '}' */
+                  break;
+                case 'r':
+                  ch = NR_TOK;
+                  number1 = 0;
+                  while ((dig = GETLOGCHAR) != ')')
+                    { number1 = number1 * 10 + dig - '0';
+                    }
+                  GETLOGCHAR;		/* Ignore '}' */
+                  break;
+                case 'l':
+                  ch = NL_TOK;
+                  number1 = 0;
+                  while ((dig = GETLOGCHAR) != ')')
+                    { number1 = number1 * 10 + dig - '0';
+                    }
+                  GETLOGCHAR;		/* Ignore '}' */
+                  break;
+              }
+            break;
+          case 's':
+            switch (ch2)
+              {
+                case 'e': ch = SE_TOK; break;
+                case 'o': ch = SO_TOK; break;
+                case 'c': ch = SC_TOK; break;
+                case 'r': ch = SR_TOK; break;
+              }
+            break;
+          case 't': ch = TA_TOK; break;
+          case 'u': ch = UP_TOK; break;
+          case 'E':
+                    while (GETLOGCHAR != '}')
+                      ;
+                    ch = ER_TOK;
+                    break;
+        }
+    }
+  else
+    {
+      debuglog ("getlogtoken ch = '%c' '%d'\n", ch, ch);
+    }
+
   return (ch);
 }
 

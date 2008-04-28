@@ -17,7 +17,8 @@
  */
 
 # include <curses.h>
-# include <setjmp.h>  
+# include <setjmp.h>
+# include <string.h>
 # include "types.h"
 # include "globals.h"
 # include "install.h"
@@ -38,6 +39,11 @@ int msgtype, a1, a2, a3, a4, a5, a6, a7, a8;
 
   /* Build the actual message */
   sprintf (msg, f, a1, a2, a3, a4, a5, a6, a7, a8);
+
+  if (msgtype & D_FATAL)
+    {
+      debuglog ("dwait ([%s])\n",msg);
+    }
 
   /* Log the message if the error is severe enough */
   if (!replaying && (msgtype & (D_FATAL | D_ERROR | D_WARNING)))
@@ -61,7 +67,7 @@ int msgtype, a1, a2, a3, a4, a5, a6, a7, a8;
     saynow (msg);
     playing = 0;
     quitrogue ("fatal error trap", Gold, SAVED);
-    longjmp (commandtop);
+    longjmp (commandtop, 0);
   }
 
   if (! debug (msgtype | D_INFORM))		/* If debugoff */
@@ -189,7 +195,7 @@ toggledebug ()
   else if (!debug (D_INFORM))     debugging = D_NORMAL | D_WARNING | D_INFORM;
   else                            debugging = D_ALL;
   
-  strcpy (debugstr, "Debugging :");
+  strncpy (debugstr, "Debugging :", 100);
 
   if (debug(D_FATAL))     strcat (debugstr, "fatal:");
   if (debug(D_ERROR))     strcat (debugstr, "error:");

@@ -8,6 +8,7 @@
 
 # include <curses.h>
 # include <ctype.h>
+# include <string.h>
 # include "types.h"
 # include "globals.h"
 
@@ -57,6 +58,8 @@ int tmode, a1, a2, a3, a4;
   /* Build the command */
   sprintf (cmd, f, a1, a2, a3, a4);
 
+  debuglog ("command : command (%s)\n",cmd);
+
   /* Echo the command if in transparent mode */
   if (transparent)		showcommand (cmd);
   else if (cmdonscreen)		clearcommand ();
@@ -76,14 +79,25 @@ int tmode, a1, a2, a3, a4;
   
   /* If in a real game (not replaying), then check for looping */
   if (!replaying)
-  { if (streq (lastcom, cmd))
-    { comcount++;
+  {
+    debuglog ("command : compare ('%s', '%s')\n",lastcom, cmd);
+    if (streq (lastcom, cmd))
+    {
+      comcount++;
+      debuglog ("command : match %d\n",comcount);
       if (streq (cmd, "i") && comcount > 3)
         dwait (D_FATAL, "command: cannot synchronize inventory, invcount %d.",
                invcount);
+//      if (comcount > 100)
+//        {
+//          debuglog ("command : '%s' repeated more than 100 times!\n",cmd);
+//          dwait (D_FATAL, "command : %s repeated more than 100 times!\n",cmd);
+//        }
     }
     else
-    { strcpy (lastcom, cmd);
+    {
+      debuglog ("command : not match\n");
+      strcpy (lastcom, cmd);
       comcount = 1;
     }
   }
@@ -108,7 +122,7 @@ int tmode, a1, a2, a3, a4;
   if (wearing ("searching") != NONE)
     bumpsearchcount ();
 
-  send (cmd);
+  rogo_send (cmd);
 }
 
 /* 
@@ -159,6 +173,7 @@ char *cmd;
 
   switch (functionchar (cmd))
   { case 'd':	setrc (STUFF | USELESS, atrow, atcol);
+        debuglog ("command : adjustpack\n");
 		deleteinv (OBJECT (commandarg (cmd, 1)));
 		break;
 

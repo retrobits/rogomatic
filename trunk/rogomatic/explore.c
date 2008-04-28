@@ -20,7 +20,7 @@
 static int expDor, expavoidval;
 static int avdmonsters[24][80];
 
-int connect[9][4] = {
+int rogo_connect[9][4] = {
     /* Room  top    bot   left  right*/
     /* 0 */  {-1,     3,    -1,     1},
     /* 1 */  {-1,     4,     0,     2},
@@ -243,13 +243,13 @@ setpsd (print)
      * Check return code from whichroom. 
      * mlm 03/17/85
      */
-   
+
     else 
     { if ((k = wallkind (i,j)) >= 0)		/* A legit sort of wall */
       { register int rm = whichroom (i,j);
       
         if (rm >= 0 && rm < 9)
-	{ whereto = connect[rm][k];
+	{ whereto = rogo_connect[rm][k];
 	  if (whereto >= 0 && whereto < 9 && 
 	      (attempt > 1 || room[whereto] == 0))
 	  { if (!onrc (PSD, i, j)) numberpsd++;
@@ -334,7 +334,7 @@ int r, c, depth, *val, *avd, *cont;
   else if (!zigzagvalue (r, c, depth, val, avd, cont))
     return (0);
 
-  if (*val > 0) { *val = *val * 1000 + depth; *cont = INFINITY; }
+  if (*val > 0) { *val = *val * 1000 + depth; *cont = ROGINFINITY; }
   *avd += avdmonsters[r][c];
   return (1);
 }
@@ -366,7 +366,7 @@ int r, c, depth, *val, *avd, *cont;
   else if (!zigzagvalue (r, c, depth, val, avd, cont))
     return (0);
 
-  if (*val > 0) { *val = *val * 1000 + depth; *cont = INFINITY; }
+  if (*val > 0) { *val = *val * 1000 + depth; *cont = ROGINFINITY; }
   *avd += avdmonsters[r][c];
   return (1);
 }
@@ -399,8 +399,8 @@ int r, c, depth, *val, *avd, *cont;
 { *avd = onrc (ARROW, r, c) ? 50 :
          onrc (TRAPDOR, r, c) ? 0 :
          onrc (TELTRAP, r, c) ? 0 :
-         onrc (GASTRAP, r, c) ? INFINITY :
-         onrc (BEARTRP, r, c) ? INFINITY :
+         onrc (GASTRAP, r, c) ? ROGINFINITY :
+         onrc (BEARTRP, r, c) ? ROGINFINITY :
          onrc (DARTRAP, r, c) ? 100 :
          onrc (WATERAP, r, c) ? 100 :
          onrc (MONSTER, r, c) ? 150 :
@@ -416,16 +416,16 @@ int r, c, depth, *val, *avd, *cont;
   else if (r == atrow && c == atcol)	/* If we are running, our current */
     { *val = 0;}			/* cant be that great -- MLM      */
   else if (onrc (RUNOK, r, c))
-    { *val = 4000; *cont = INFINITY;}
+    { *val = 4000; *cont = ROGINFINITY;}
   else if (onrc (DOOR | BEEN, r, c) == DOOR)
-    { *val = 2000+depth; *cont = INFINITY;}
+    { *val = 2000+depth; *cont = ROGINFINITY;}
   else if (onrc (DOOR, r, c))
-    { *val = 1000+depth; *cont = INFINITY;}
+    { *val = 1000+depth; *cont = ROGINFINITY;}
   else if (onrc (HALL, r, c))
-    { *val =      depth; *cont = INFINITY;}
+    { *val =      depth; *cont = ROGINFINITY;}
   /* ----------------------------------------------------------------
   else if (onrc (CANGO | TRAP, r, c) == CANGO)
-    { *val = 1+depth; *cont = INFINITY;}
+    { *val = 1+depth; *cont = ROGINFINITY;}
   ---------------------------------------------------------------- */
   else
     { *val = 0; }
@@ -474,8 +474,8 @@ int *val, *avd, *cont;
 { *avd = onrc (ARROW, r, c) ? 50 :
          onrc (TRAPDOR, r, c) ? 0 :
          onrc (TELTRAP, r, c) ? 0 :
-         onrc (GASTRAP, r, c) ? INFINITY :
-         onrc (BEARTRP, r, c) ? INFINITY :
+         onrc (GASTRAP, r, c) ? ROGINFINITY :
+         onrc (BEARTRP, r, c) ? ROGINFINITY :
          onrc (DARTRAP, r, c) ? 100 :
          onrc (WATERAP, r, c) ? 100 :
          onrc (MONSTER, r, c) ? 50 : 0;
@@ -484,7 +484,7 @@ int *val, *avd, *cont;
     *avd += 200;
 
   if (onrc (RUNOK, r, c))	{ *val = 2;}
-  else if (onrc (DOOR, r, c))	{ *val = 1; *cont = INFINITY;}
+  else if (onrc (DOOR, r, c))	{ *val = 1; *cont = ROGINFINITY;}
   else				{ *val = 0;}
 
   *avd += avdmonsters[r][c];
@@ -503,7 +503,7 @@ expinit ()
 
 roominit ()
 { expinit ();
-  expDor = INFINITY;
+  expDor = ROGINFINITY;
   return (1);
 }
 
@@ -750,7 +750,7 @@ int *val, *avd, *cont;
  */
 
 # define AVOID(r,c,ch) \
-  { avdmonsters[r][c] = INFINITY; \
+  { avdmonsters[r][c] = ROGINFINITY; \
     if (debug (D_SCREEN)) { at((r),(c)); addch(ch); at(row,col); }}
 
 avoidmonsters ()
@@ -916,7 +916,7 @@ findroom ()
 
   if (new_findroom)
   { if (!on (ROOM) && secret ())			return (1);
-    if (makemove (EXPLORE, expinit, expvalue, REUSE))	return (1);
+    if (makemove (EXPLORE, expinit, expvalue, REUSE))	 return (1);
   }
 
   new_findroom = 0;
@@ -973,13 +973,12 @@ doorexplore()
  *   S A F E   S Q U A R E   S E A R C H 	Use genericinit.
  */
 
-/* ARGSUSED */
 safevalue (r, c, depth, val, avd, cont)
 int r, c, depth, *val, *avd, *cont;
 { register int k, v;
 
   *avd = onrc (SAFE, r, c)    ? 0 :
-	 onrc (TRAPDOR | BEARTRP | GASTRAP, r, c) ? INFINITY :
+	 onrc (TRAPDOR | BEARTRP | GASTRAP, r, c) ? ROGINFINITY :
 	 onrc (ARROW, r, c)   ? 50 :
          onrc (TELTRAP, r, c) ? 50 :
          onrc (DARTRAP, r, c) ? 200 :
@@ -1111,8 +1110,8 @@ archeryvalue (r, c, depth, val, avd, cont)
 int r, c, depth, *val, *avd, *cont;
 { 
   *avd = (onrc (SAFE, r, c)	? 0 :
-	  onrc (TRAPDOR, r, c)	? INFINITY :
-	  onrc (HALL, r, c)	? INFINITY :
+	  onrc (TRAPDOR, r, c)	? ROGINFINITY :
+	  onrc (HALL, r, c)	? ROGINFINITY :
 	  onrc (ARROW, r, c)	? 50 :
           onrc (TELTRAP, r, c)	? 50 :
           onrc (GASTRAP, r, c)	? 50 :
@@ -1126,7 +1125,7 @@ int r, c, depth, *val, *avd, *cont;
     *avd += 500;
 
   *val = archval[r][c];
-  *cont = INFINITY;
+  *cont = ROGINFINITY;
 
   return (1);
 }
@@ -1190,11 +1189,11 @@ int depth, *val, *avd, *cont;
   *avd = *val = 0;
 
   /* Set base value of square */
-  if (onrc (TRAP|MONSTER,r, c))               { *avd = INFINITY; return (0); }
-  else if (restinroom && onrc (DOOR,r, c))    { *avd = INFINITY; return (0); }
+  if (onrc (TRAP|MONSTER,r, c))               { *avd = ROGINFINITY; return (0); }
+  else if (restinroom && onrc (DOOR,r, c))    { *avd = ROGINFINITY; return (0); }
   else if (onrc (SCAREM, r, c))
   { if (objcount == maxobj || version >= RV53A) { *val = 500; return (1); }
-    else                                      { *avd = INFINITY; return (0); }
+    else                                      { *avd = ROGINFINITY; return (0); }
   }
   else if (onrc (STAIRS, r, c))               { *val = 400; return (1); }
   else if (onrc (ROOM, r, c))                 { *val = 1; *cont = 99;}

@@ -13,14 +13,6 @@
  *	Created.
  */
 
-/* The unctrl macro for systems where curses doesn't define it */
-
-# ifndef unctrl
-extern char	*_unctrl[];
-
-# define	unctrl(ch)	(_unctrl[ch & 0177])
-# endif
-
 /* Global Preprocessor constants */
 
 # define ill		";'"
@@ -42,7 +34,6 @@ extern char	*_unctrl[];
 # define FAILURE	(0)
 
 # define ISPRT(c)	((c) >= ' ' && (c) <= '~')
-# define GETROGUECHAR	fgetc(frogue)
 # define GETLOGCHAR	fgetc(logfile)
 
 /*
@@ -97,7 +88,7 @@ extern char	*_unctrl[];
 # define DOORW		(-2)
 # define CORNERW	(-3)
 
-# define INFINITY	(10000)
+# define ROGINFINITY	(10000)
 
 # define NOTAMOVE	(-1)
 
@@ -144,6 +135,7 @@ extern char	*_unctrl[];
 # define RV52A		(521)	/* NEWROG: Rogue 5.2 */
 # define RV52B		(522)	/* Rogue 5.2 with maze rooms */
 # define RV53A		(531)	/* Rogue 5.3 new monsters */
+# define RV54A		(544)	/* Rogue 5.4.4 ???? */
 
 /* Ways to spend time */
 
@@ -294,7 +286,7 @@ extern char	*_unctrl[];
 # define forget(obj,trait) ((obj>=0) ? (inven[obj].traits&= ~(trait)) : 0)
 
 /* The types of objects */
-typedef enum { strange, food, potion, scroll, wand, ring, hitter,
+typedef enum { strange, food, potion, Scroll, wand, ring, hitter,
                thrower, missile, armor, amulet, gold, none} stuff;
 
 typedef struct { int   fail, win; } probability;

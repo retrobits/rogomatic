@@ -6,7 +6,7 @@
  */
 
 /* global files */
-extern FILE *frogue,*trogue;	/* From Rogue, To Rogue */
+extern FILE *trogue;	/* From Rogue, To Rogue */
 extern FILE *fecho;		/* Rogomatic score file */
 extern FILE *logfile;		/* Rogomatic score file */
 extern FILE *realstdout;	/* Real stdout when in terse or emacs mode */

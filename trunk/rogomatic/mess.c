@@ -8,6 +8,7 @@
 
 # include <curses.h>
 # include <ctype.h>
+# include <string.h>
 # include "types.h"
 # include "globals.h"
 
@@ -24,7 +25,7 @@ static int sumgold=0, sumsqgold=0, numgold=0;
 static mhit=0, mmiss=0, mtarget= NONE;
 
 /* Other local data */
-identifying = 0;		/* Next message is from identify scroll */
+int identifying = 0;		/* Next message is from identify scroll */
 static int justreadid = 0;	/* True if just read identify scroll */
 static int gushed = 0;		/* True ==> water on the head msg recently */
 static int echoit;		/* True ==> echo this message to the user */
@@ -48,6 +49,14 @@ static char *result[] = { res1, res2, res3, res4 };
 terpmes ()
 { char mess[128];
   register char *m, *mend, *s = screen[0], *t;
+
+  int i;
+  debuglog ("terpmes ()\n");
+  for (i=0; i < 79 ;++i)
+    {
+      debuglog ("%c",screen[0][i]);
+    }
+  debuglog ("\n");
 
   /* Set 't' to the tail of the message, skip backward over blank & dot */  
   for (t=s+79; *t==' ' || *t=='.'; t--) ;	/* Find last non-blank */
@@ -80,22 +89,38 @@ register char *mess, *mend;
 { int unknown = 0;
 
   echoit = 1;
+  debuglog ("parsemsg ('%s', '%s')\n", mess, mend);
 
   /*----------------Take action based on type of message-------------*/
 
-  if (MATCH("was wearing *")) ;
-
+  if (MATCH("was wearing *"))
+    {
+      debuglog ("parsemsg : 1\n");
+    }
   /* Message indicates we picked up a new item */
   else if (mend[-1]==')' && mend[-3]=='(')
-  { echoit = !inventory (mess, mend); identifying = justreadid = 0; }
-
+  {
+    debuglog ("parsemsg : 2\n");
+    echoit = !inventory (mess, mend);
+    debuglog ("parsemsg : 3\n");
+    identifying = justreadid = 0;
+  }
   /* Message describes an old item already in our pack */
   else if (mess[1]==')')
-  { echoit = identifying; identifying = justreadid = 0; inventory(mess,mend); }
-
+  {
+    debuglog ("parsemsg : 4\n");
+    echoit = identifying;
+    debuglog ("parsemsg : 5\n");
+    identifying = justreadid = 0;
+    debuglog ("parsemsg : 6\n");
+    inventory(mess,mend);
+    debuglog ("parsemsg : 7\n");
+  }
   /* A random message, switch of first char to save some time... */
   else switch (mess[0])
-  { case 'a':
+  {
+    debuglog ("parsemsg : 8\n");
+    case 'a':
       if (MATCH("as you read the scroll, it vanishes")) echoit=0;
       else if (MATCH("a cloak of darkness falls around you"))
       { infer ("blindness"); blinded=1; }
@@ -241,9 +266,32 @@ register char *mess, *mend;
 
     case 'r':
       if (MATCH("range is 'a' to '*'")) 
-      { echoit=0;
+      {
+        debuglog ("mess : parsemsg : range checking '%c' '%d'\n",*res1, invcount);
+        echoit=0;
         if (*res1-'a'+1 != invcount)
-        { dwait (D_INFORM, "Range check failed..."); usesynch = 0; }
+        {
+          debuglog ("mess : parsemsg : Range check failed\n");
+          dwait (D_INFORM, "Range check failed...");
+          /* I hate to have the special case here, but couldn't figure out a
+           * better place, without this we get a segfault in some game replays
+           * because rogomatic gets confused.  So if we are replaying, just
+           * reset invcount and cross our fingers - NYM
+           */
+//          if (replaying)
+//            {
+//              invcount = *res1-'a'+1;
+//            }
+          /* TODO: maybe we can use usesynch elsewhere to synchronize
+           *       inventory?
+           */
+          debuglog ("mess : parsemsg : r : usesynch = 0\n");
+          usesynch = 0;
+        }
+        else
+        {
+          debuglog ("mess : parsemsg : Range check succeeded\n");
+        }
       }
       else if (MATCH("read what*")) echoit=0;
       else if (MATCH("rogue version *")) echoit=0;
@@ -251,7 +299,11 @@ register char *mess, *mend;
       break;
 
     case 's':
-      if (MATCH("she stole *")) usesynch = 0;
+      if (MATCH("she stole *"))
+        {
+          debuglog ("mess : parsemsg : s : usesynch = 0\n");
+          usesynch = 0;
+        }
       else if (MATCH("sting has no effect")) ;
       else unknown++;
       break;
@@ -277,7 +329,11 @@ register char *mess, *mend;
       else if (MATCH("the corridor glows*")) { infer ("light"); }
       else if (MATCH("the * has confused you")) confused = 1;
       else if (MATCH("this scroll is an * scroll"))
-      { if (stlmatch (res1, "identify")) readident (res1); }
+      { if (stlmatch (res1, "identify"))
+          {
+            readident (res1);
+          }
+      }
       else if (MATCH("that's not a valid item"))
       { echoit = justreadid < 1; if (justreadid-- == 0) sendnow (" *");
         if (justreadid < -50) dwait (D_FATAL, "Caught in invalid item loop"); }
@@ -292,11 +348,20 @@ register char *mess, *mend;
       else if (MATCH("the * bounces")) ;
       else if (MATCH("the * vanishes as it hits the ground"))
       { darkturns = 0; darkdir = NONE; targetmonster = 0; echoit=0; }
-      else if (MATCH("there is something here*")) { usesynch=0; set(STUFF); }
+      else if (MATCH("there is something here*"))
+        {
+          debuglog ("mess : parsemsg : there is ... : usesynch = 0\n");
+          usesynch=0;
+          set(STUFF);
+        }
       else if (MATCH("the munchies are interfering*")) ;
       else if (MATCH("the monsters around you freeze")) holdmonsters ();
       else if (MATCH("the monster freezes")) holdmonsters ();
-      else if (MATCH("that's inedible")) usesynch = 0; 
+      else if (MATCH("that's inedible"))
+        {
+          debuglog ("mess : parsemsg : thats inedible : usesynch = 0\n");
+          usesynch = 0; 
+        }
       else unknown++;
       break;
 
@@ -430,13 +495,16 @@ register char *mess, *mend;
       break;
   }
 
+  debuglog ("parsemsg : 9\n");
   /* Log unknown or troublesome messages */
   if (morecount > 50)	dwait (D_WARNING, "More loop msg '%s'", mess);
   else if (unknown)	dwait (D_WARNING, "Unknown message '%s'", mess);
 
+  debuglog ("parsemsg : 10\n");
   /* Send it to dwait; if dwait doesnt print it (and echo is on) echo it */
   if (echoit & !dwait (D_MESSAGE, mess))
     saynow (mess);
+  debuglog ("parsemsg : 11\n");
 }
 
 /* 
@@ -485,6 +553,7 @@ readident (name)
 char *name;
 { int obj; char id = '*';	/* Default is "* for list" */
 
+  debuglog ("mess : readident (%s) %d %d\n",name, afterid, nextid);
   if (!replaying && version < RV53A &&
       (nextid < LETTER (0) || nextid > LETTER (invcount))) 
   { dwait (D_FATAL, "Readident: nextid %d, afterid %d, invcount %d.",
@@ -493,9 +562,16 @@ char *name;
   infer (name);		/* Record what kind of scroll this is */
 
   if (version < RV53A)		/* Rogue 3.6, Rogue 5.2 */
-  { deleteinv (OBJECT (afterid));	/* Assume object gone */
+  {
+    debuglog ("mess : readident (%d)\n",afterid);
+    deleteinv (OBJECT (afterid));	/* Assume object gone */
     sendnow (" %c", nextid);		/* Identify it */
-    send ("I%c", afterid);		/* Generate a message about it */
+    if (!replaying)   /* FIXME: without removing the rogo_send call during
+                       * replay, replay will core dump - NYM
+                       */
+      {
+        rogo_send ("I%c", afterid);		/* Generate a message about it */
+      }
     knowident = identifying = 1;	/* Set variables */
   }
   else				/* Rogue 5.3 */
@@ -529,6 +605,7 @@ char *name;
 
     waitfor ("not a valid item"); waitfor ("--More--");
     sendnow (" %c;", id);		/* Pick an object to identify */
+    debuglog ("mess : readident : usesynch = 0\n");
     usesynch = 0; justreadid=1;		/* Must reset inventory */
   }
 
@@ -583,7 +660,9 @@ rampage ()
  */
 
 curseditem ()
-{ usesynch = 0;    /* Force a reset inventory */
+{
+  debuglog ("mess : curseditem : usesynch = 0\n");
+  usesynch = 0;    /* Force a reset inventory */
 
   /* lastdrop is index of last item we tried to use which could be cursed */
   if (lastdrop != NONE && lastdrop < invcount)

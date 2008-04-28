@@ -6,6 +6,7 @@
  */
 
 # include <curses.h>
+# include <string.h>
 # include "types.h"
 # include "globals.h"
 
@@ -74,7 +75,10 @@ register FILE *f;
     else if (f != NULL)				/* Write to a file */
     { fprintf (f, "%s\n", itemstr (i)); }
     else					/* Dump on the screen */
-    { printw ("%s\n", itemstr (i)); }
+    {
+      debuglog ("pack : dumpinv %d/%d : %s\n", i, MAXINV, itemstr (i));
+//      printw ("%s\n", itemstr (i));
+    }
   }
 }
 
@@ -85,6 +89,8 @@ register FILE *f;
 removeinv (pos)
 int pos;
 { 
+  debuglog ("pack : removeinv (%d) %d : START\n",pos, invcount);
+  dumpinv (NULL);
   if (--(inven[pos].count) == 0)
   { clearpack  (pos);		/* Assure nothing at that spot  DR UT */
     rollpackup (pos);		/* Close up the hole */
@@ -92,6 +98,8 @@ int pos;
 
   countpack ();
   checkrange = 1;
+  debuglog ("pack : removeinv (%d) %d : END\n",pos, invcount);
+  dumpinv (NULL);
 }
 
 /*
@@ -103,6 +111,9 @@ int pos;
 deleteinv (pos)
 int pos;
 { 
+  debuglog ("pack : deleteinv (%d) %d : START\n",pos,invcount);
+  dumpinv (NULL);
+
   if (--(inven[pos].count) == 0 || inven[pos].type == missile)
   { clearpack  (pos);		/* Assure nothing at that spot  DR UT */
     rollpackup (pos);		/* Close up the hole */
@@ -110,6 +121,8 @@ int pos;
 
   countpack ();
   checkrange = 1;
+  debuglog ("pack : deleteinv (%d) %d : END\n",pos,invcount);
+  dumpinv (NULL);
 }
 
 /*
@@ -119,6 +132,9 @@ int pos;
 clearpack (pos)
 int pos;
 {
+  debuglog ("pack : clearpack (%d) %d : START\n",pos,invcount);
+  dumpinv (NULL);
+
   if (pos >= MAXINV) return;
   inven[pos].count = 0;
   inven[pos].str[0] = '\0';
@@ -127,6 +143,8 @@ int pos;
   inven[pos].charges = UNKNOWN;
   forget (pos, (KNOWN | CURSED | ENCHANTED | PROTECTED | UNCURSED |
                 INUSE | WORTHLESS));
+  debuglog ("pack : clearpack (%d) %d : END\n",pos,invcount);
+  dumpinv (NULL);
   
 }
 
@@ -140,6 +158,8 @@ register int pos;
 { register char *savebuf;
   register int i;
 
+  debuglog ("pack : rollpackup (%d) %d : START\n",pos,invcount);
+  dumpinv (NULL);
   if (version >= RV53A) return;
 
   if (pos < currentarmor) currentarmor--;
@@ -159,6 +179,10 @@ register int pos;
     inven[i] = inven[i+1];
 
   inven[--invcount].str = savebuf;
+
+  inven[invcount].count = 0; /* mark this slot as empty - NYM */
+  debuglog ("pack : rollpackup (%d) %d : END\n",pos,invcount);
+  dumpinv (NULL);
 }
 
 /* 
@@ -171,9 +195,17 @@ register int pos;
 { register char *savebuf;
   register int i;
 
-  if (version >= RV53A) return;
+  debuglog ("pack : rollpackdown (%d) %d : START\n",pos, invcount);
+  dumpinv (NULL);
+  if (version >= RV53A)
+    {
+      return;
+    }
 
+//  debuglog ("rollpackdown : invcount = %d MAXINV = %d\n",invcount, MAXINV);
+//  debuglog ("rollpackdown : savebuf = inven[%d].str = '%s'\n", invcount, inven[invcount].str);
   savebuf = inven[invcount].str;
+//  debuglog ("rollpackdown : loop\n");
   for (i=invcount; i>pos; --i)
   { inven[i] = inven[i-1];
     if (i-1 == currentarmor)   currentarmor++;
@@ -181,10 +213,18 @@ register int pos;
     if (i-1 == leftring)       leftring++;
     if (i-1 == rightring)      rightring++;
   }
+//  debuglog ("rollpackdown : inven[%d].str = savebuf = '%s'\n", pos, savebuf);
   inven[pos].str = savebuf;
+//  debuglog ("rollpackdown : inven[%d].str = '%s'\n", pos, inven[pos].str);
 
   if (++invcount > MAXINV)
-    usesynch = 0; 
+    {
+      debuglog ("pack : rollpackdown : usesynch = 0\n");
+      usesynch = 0; 
+    }
+
+  debuglog ("pack : rollpackdown (%d) %d : END\n",pos, invcount);
+  dumpinv (NULL);
 }
 
 /*
@@ -194,7 +234,20 @@ register int pos;
 
 resetinv()
 { 
-  if (!replaying) command (T_OTHER, "i");
+  debuglog ("pack : resetinv\n");
+  if (!replaying)
+    {
+      command (T_OTHER, "i");
+    }
+  else
+    {
+      /* if we are replaying, then the original game would have caused
+       * doresetinv to be called via the command above, so just call it 
+       * directly.  If this isn't called the replay core dumps with a
+       * segfault because the inventory structure is incorrect - NYM
+       */
+      doresetinv ();
+    }
 }
 
 /*
@@ -205,6 +258,7 @@ doresetinv ()
 { int i;
   static char space[MAXINV][80]; 
 
+  debuglog ("pack : doresetinv : usesynch = 1\n");
   usesynch = 1;
   checkrange = 0;
 
@@ -234,11 +288,14 @@ char *msgstart, *msgend;
   stuff what; 
   char *xbeg, *xend;
 
+  debuglog ("pack : inventory ('%s', '%s')\n",mess, mend);
+
   xbeg = xend = "";
   dwait (D_PACK, "inventory: message %s", mess);
 
   /* Rip surrounding garbage from the message */
 
+  debuglog ("inventory : 1\n");
   if (mess[1] == ')')
   { ipos= DIGIT(*mess); mess+=3;}
   else
@@ -247,6 +304,7 @@ char *msgstart, *msgend;
     unsetrc (USELESS, atrow, atcol);
     newitem = 1; }
          
+  debuglog ("inventory : 2 : %d/%d : %s\n",ipos, invcount, itemstr(ipos));
   if (ISDIGIT(*mess))
   { n=atoi(mess); mess += 2+(n>9); }
   else 
@@ -258,25 +316,32 @@ char *msgstart, *msgend;
     if (*mess == 'e') mess++;
     if (*mess == ' ') mess++; } /* Eat the space after the determiner */
 
+  debuglog ("inventory : 3 : %d : %s\n",ipos, itemstr(ipos));
   /* Read the plus to hit */
   if (*mess=='+' || *mess=='-')
   { plushit = atoi(mess++); 
     while (ISDIGIT (*mess)) mess++;
     xknow = KNOWN;}
 
+  debuglog ("inventory : 4 : %d : %s\n",ipos, itemstr(ipos));
   /* Eat any comma separating two modifiers */
   if (*mess==',') mess++;
 
+  debuglog ("inventory : 5 : %d : %s\n",ipos, itemstr(ipos));
   /* Read the plus damage */
   if (*mess=='+' || *mess=='-')
   { plusdam = atoi(mess++); 
     while (ISDIGIT (*mess)) mess++;
     xknow = KNOWN;}
 
+  debuglog ("inventory : 6 : %d : %s\n",ipos, itemstr(ipos));
   while (*mess==' ') mess++;		/* Eat any separating spaces */
+  debuglog ("inventory : 7\n");
   while (mend[-1]==' ') mend--;		/* Remove trailing blanks */
+  debuglog ("inventory : 8\n");
   while (mend[-1]=='.') mend--;		/* Remove trailing periods */
 
+  debuglog ("inventory : 9 : %d : %s\n",ipos, itemstr(ipos));
   /* Read any parenthesized strings at the end of the message */
   while (mend[-1]==')')
   { while (*--mend != '(') ;		/* on exit mend -> '(' */
@@ -292,6 +357,7 @@ char *msgstart, *msgend;
     while (mend[-1]==' ') mend--;
   }
 
+  debuglog ("inventory : 10 : %d : %s\n",ipos, itemstr(ipos));
   /* Read the charges on a wand (or armor class or ring bonus) */
   if (mend[-1] == ']')
   { while (*--mend != '[');		/* on exit mend -> '[' */
@@ -300,24 +366,27 @@ char *msgstart, *msgend;
     xknow = KNOWN;
   }
 
+  debuglog ("inventory : 11 : %d : %s\n",ipos, itemstr(ipos));
   /* Undo plurals by removing trailing 's' */
   while (mend[-1] == ' ') mend--;
+  debuglog ("inventory : 12\n");
   if (mend[-1]=='s') mend--;
 
+  debuglog ("inventory : 13 : %d : %s\n",ipos, itemstr(ipos));
   /* Now find what we have picked up: */
   if (stlmatch(mend-4,"food")) {what=food;xknow=KNOWN;}
   else if (stlmatch(mess,"amulet")) xtr(amulet,0,0,KNOWN)
   else if (stlmatch(mess,"potion of ")) xtr(potion,10,0,KNOWN)
   else if (stlmatch(mess,"potions of ")) xtr(potion,11,0,KNOWN)
-  else if (stlmatch(mess,"scroll of ")) xtr(scroll,10,0,KNOWN)
-  else if (stlmatch(mess,"scrolls of ")) xtr(scroll,11,0,KNOWN)
+  else if (stlmatch(mess,"scroll of ")) xtr(Scroll,10,0,KNOWN)
+  else if (stlmatch(mess,"scrolls of ")) xtr(Scroll,11,0,KNOWN)
   else if (stlmatch(mess,"staff of ")) xtr(wand,9,0,KNOWN)
   else if (stlmatch(mess,"wand of ")) xtr(wand,8,0,KNOWN)
   else if (stlmatch(mess,"ring of "))  xtr(ring,8,0,KNOWN)
   else if (stlmatch(mend-4,"mail")) xtr(armor,0,0,0)
   else if (stlmatch(mend-6,"potion")) xtr(potion,0,7,0)
-  else if (stlmatch(mess,"scroll titled '")) xtr(scroll,15,1,0)
-  else if (stlmatch(mess,"scrolls titled '")) xtr(scroll,16,1,0)
+  else if (stlmatch(mess,"scroll titled '")) xtr(Scroll,15,1,0)
+  else if (stlmatch(mess,"scrolls titled '")) xtr(Scroll,16,1,0)
   else if (stlmatch(mend-5,"staff")) xtr(wand,0,6,0)
   else if (stlmatch(mend-4,"wand"))  xtr(wand,0,5,0)
   else if (stlmatch(mend-4,"ring")) xtr(ring,0,5,0)
@@ -339,20 +408,24 @@ char *msgstart, *msgend;
 
   /* Copy the name of the object into a string */
 
+  debuglog ("inventory : 14 : %d : %s\n",ipos, itemstr(ipos));
   for (p = objname, q = xbeg; q < xend;  p++, q++) *p = *q;
   *p = '\0';
 
+  debuglog ("inventory : 15 : %d : %s\n",ipos, itemstr(ipos));
   dwait (D_PACK, "inv: %s '%s', hit %d, dam %d, chg %d, knw %d",
          stuffmess[(int) what], objname, plushit, plusdam, charges, xknow);
 
+  debuglog ("inventory : 16 : %d : %s\n",ipos, itemstr(ipos));
   /* Ring bonus is printed differently in Rogue 5.3 */
   if (version >= RV53A && what == ring && charges != UNKNOWN)
   { plushit = charges; charges = UNKNOWN; }
 
   /* If the name of the object matches something in the database, */
   /* slap the real name into the slot and mark it as known */
+  debuglog ("inventory : 17 : %d : %s\n",ipos, itemstr(ipos));
 
-  if ((what == potion || what == scroll || what == wand) && !xknow)
+  if ((what == potion || what == Scroll || what == wand) && !xknow)
   { char *dbname = realname (objname);
     if (*dbname)
     { strcpy (objname, dbname);
@@ -365,7 +438,7 @@ char *msgstart, *msgend;
 
         printw ("%s%s of %s (%c)",
                 what == potion ?    "potion" :
-                  what == scroll ?  "scroll" :
+                  what == Scroll ?  "scroll" :
                   what == ring ?    "ring" :
                                     "wand",
                 (n == 1) ? "" : "s",
@@ -380,6 +453,7 @@ char *msgstart, *msgend;
     }
   }
 
+  debuglog ("inventory : 18 : %d : %s\n",ipos, itemstr(ipos));
   /* If new item, record the change */
   if (newitem && what == armor) 
     newarmor = 1;
@@ -393,16 +467,25 @@ char *msgstart, *msgend;
   /* If the object is an old object, set its count, else allocate */
   /* a new object and roll the other objects down */
 
+  debuglog ("inventory : 19 : %d : %s\n",ipos, itemstr(ipos));
   if (n > 1 && ipos < invcount && inven[ipos].type == what &&
       n == inven[ipos].count+1 &&
       stlmatch(objname, inven[ipos].str) && 
       inven[ipos].phit == plushit &&
       inven[ipos].pdam == plusdam)
+  {
+    debuglog ("inventory : 19.1 '%s'\n",itemstr (ipos));
     inven[ipos].count = n;
-
+  }
   /* New item, in older Rogues, open up a spot in the pack */
   else
-  { if (version < RV53A) rollpackdown (ipos);		
+  {
+    debuglog ("inventory : 19.2\n");
+    if (version < RV53A)
+      {
+        debuglog ("inventory : 19.3\n");
+        rollpackdown (ipos);		
+      }
 
     inven[ipos].type = what;
     inven[ipos].count = n;
@@ -413,31 +496,66 @@ char *msgstart, *msgend;
     if (!xknow) ++urocnt;
   }
 
+  debuglog ("inventory : 20 : %d : %s\n",ipos, itemstr(ipos));
   /* Forget enchanted status if item known.  DR UTexas 31 Jan 84 */
-  if (itemis (ipos, KNOWN)) forget (ipos, ENCHANTED);
+  if (itemis (ipos, KNOWN))
+    {
+      debuglog ("inventory : 20.1\n");
+      forget (ipos, ENCHANTED);
+    }
 
+  debuglog ("inventory : 21 : %d : %s\n",ipos, itemstr(ipos));
   /* Set the name of the object */
   if (inven[ipos].str != NULL)
-    strcpy (inven[ipos].str, objname);
+    {
+      debuglog ("inventory : 21.1\n");
+      if (objname == NULL)
+        {
+          debuglog ("inventory : objname = 'NULL'\n");
+        }
+      else
+        {
+          debuglog ("inventory : objname = '%s'\n",objname);
+        }
+      if (inven[ipos].str == NULL)
+        {
+          debuglog ("inventory : inven[ipos].str = 'NULL'\n");
+        }
+      else
+        {
+          debuglog ("inventory : inven[ipos].str = 'NOT NULL' %d \n",ipos);
+        }
+      strcpy (inven[ipos].str, objname);
+      debuglog ("inventory : 21.2\n");
+    }
   else if (!replaying)
-    dwait (D_ERROR, "terpmess: null inven[%d].str, invcount %d.",
-           ipos, invcount);
+    {
+      debuglog ("inventory : 21.3\n");
+      dwait (D_ERROR, "terpmess: null inven[%d].str, invcount %d.",
+             ipos, invcount);
+      debuglog ("inventory : 21.4\n");
+    }
 
+  debuglog ("inventory : 22\n");
   /* Set cursed attribute for weapon and armor */
   if (cursedarmor && ipos == currentarmor) remember (ipos, CURSED);
   if (cursedweapon && ipos == currentweapon) remember (ipos, CURSED);
 
+  debuglog ("inventory : 23\n");
   /* Keep track of whether we are wielding a trap arrow */
   if (ipos == currentweapon) usingarrow = (what == missile);
 
+  debuglog ("inventory : 24\n");
   countpack ();
 
+  debuglog ("inventory : 25\n");
   /* If we picked up a useless thing, note that fact */
   if (newitem && on (USELESS))	remember (ipos, WORTHLESS);
   else if (newitem)		forget (ipos, WORTHLESS);
 
   checkrange = 1;
   
+  debuglog ("inventory : 26\n");
   return (printed);
 }
 

@@ -215,65 +215,65 @@ readscroll ()
 { register int obj, obj2;
 
   /* Check the item specific identify scrolls first */
-  if (((obj = havenamed (scroll, "identify armor")) != NONE &&
+  if (((obj = havenamed (Scroll, "identify armor")) != NONE &&
        (obj2 = unknown (armor)) != NONE) ||
-      ((obj = havenamed (scroll, "identify weapon")) != NONE &&
+      ((obj = havenamed (Scroll, "identify weapon")) != NONE &&
        (obj2 = unknown (hitter)) != NONE) ||
-      ((obj = havenamed (scroll, "identify potion")) != NONE &&
+      ((obj = havenamed (Scroll, "identify potion")) != NONE &&
        (obj2 = unknown (potion)) != NONE) ||
-      ((obj = havenamed (scroll, "identify scroll")) != NONE &&
-       (obj2 = unknown (scroll)) != NONE) ||
-      ((obj = havenamed (scroll, "identify ring, wand or staff")) != NONE &&
+      ((obj = havenamed (Scroll, "identify scroll")) != NONE &&
+       (obj2 = unknown (Scroll)) != NONE) ||
+      ((obj = havenamed (Scroll, "identify ring, wand or staff")) != NONE &&
        ((obj2 = unknown (ring)) != NONE || (obj2 = unknown (wand)) != NONE)))
   { prepareident (obj2, obj);
     return (reads (obj)); }
 
   /* In older version, have multiple uses for generic identify scrolls */
-  if ((obj = havenamed (scroll, "identify")) != NONE &&
+  if ((obj = havenamed (Scroll, "identify")) != NONE &&
       (currentweapon != NONE) &&
       (!itemis (currentweapon, KNOWN) && 
         (!usingarrow || goodarrow > 20)))
   { prepareident (currentweapon, obj);
     return (reads (obj)); }
 
-  if ((obj = havenamed (scroll, "identify")) != NONE &&
+  if ((obj = havenamed (Scroll, "identify")) != NONE &&
       ((obj2 = unknown (ring)) != NONE ||
        (obj2 = unidentified (wand)) != NONE ||
-       (obj2 = unidentified (scroll)) != NONE ||
+       (obj2 = unidentified (Scroll)) != NONE ||
        Level > 10 && (obj2 = unknown (wand)) != NONE ||
        ((cheat || version == RV36A) &&
         ((obj2 = unknown (potion)) != NONE ||
-         (obj2 = haveother (scroll, obj)) != NONE))))
+         (obj2 = haveother (Scroll, obj)) != NONE))))
   { prepareident (obj2, obj);
     return (reads (obj)); }
 
   if ((cursedarmor || cursedweapon) &&
-      (obj = havenamed (scroll, "remove curse")) != NONE)
+      (obj = havenamed (Scroll, "remove curse")) != NONE)
     return (reads (obj));
 
-  if ((obj = havenamed (scroll, "genocide")) != NONE)
+  if ((obj = havenamed (Scroll, "genocide")) != NONE)
     return (reads (obj));
 
   if (currentweapon != NONE && 
       (goodweapon || usingarrow || MaxLevel > 12) &&
-      (obj = havenamed (scroll, "enchant weapon")) != NONE)
+      (obj = havenamed (Scroll, "enchant weapon")) != NONE)
     return (reads (obj));
 
   if (Level != didreadmap && Level > 12 &&
-       (obj = havenamed (scroll, "magic mapping")) != NONE)
+       (obj = havenamed (Scroll, "magic mapping")) != NONE)
     return (reads (obj));
 
   /* About to read an unknown scroll. We will assure that we have */
   /* a weapon in hand, and put on our best armor for the occasion */
   /* We must also prepare to identify something, just in case.    */
 
-  if ((obj = havenamed (scroll, "enchant armor")) != NONE ||
-      (obj = havenamed (scroll, "protect armor")) != NONE ||
+  if ((obj = havenamed (Scroll, "enchant armor")) != NONE ||
+      (obj = havenamed (Scroll, "protect armor")) != NONE ||
       ((currentweapon != NONE) &&
        (Level >= (k_exper/10) || objcount >= maxobj ||
         cursedarmor || cursedweapon) &&
        (exploredlevel || Level > 18 || know ("aggravate monsters")) &&
-       (obj = unknown (scroll)) != NONE))
+       (obj = unknown (Scroll)) != NONE))
   { prepareident (pickident (), obj);
 
     /* Go to a corner to read the scroll */
@@ -845,6 +845,7 @@ trywand ()
   if (dir > 7) return (0);
 
   /* Set to do a reset inventory (usesynch) and point the wand */
+  debuglog ("tactics : trywand : usesynch = 0\n");
   usesynch = 0;  
   return (point (obj, dir));
 }

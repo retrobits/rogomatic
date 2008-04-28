@@ -97,17 +97,22 @@
 
 # include <curses.h>
 # include <ctype.h>
+# include <fcntl.h>
 # include <signal.h>
 # include <setjmp.h>  
+# include <string.h>
+# include <stdlib.h>
 # include "types.h"
 # include "termtokens.h"
 # include "install.h"
+
+/* FIXME: get rid of this prototype in the correct way */
+FILE *rogo_openlog (char *genelog);
 
 /* global data - see globals.h for current definitions */
 
 /* Files */
 FILE  *fecho=NULL;		/* Game record file 'echo' option */
-FILE  *frogue=NULL;		/* Pipe from Rogue process */
 FILE  *logfile=NULL;		/* File for score log */
 FILE  *realstdout=NULL;		/* Real stdout for Emacs, terse mode */
 FILE  *snapshot=NULL;		/* File for snapshot command */
@@ -236,9 +241,9 @@ int   zone = NONE;		/* Current screen zone, 0..8 */
 int   zonemap[9][9];		/* Map of zones connections */
 
 /* Functions */
-int (*istat)(), onintr ();
+void (*istat)(int);
+void onintr (int sig);
 char getroguetoken (), *getname();
-FILE *openlog();
 
 /* Stuff list, list of objects on this level */
 stuffrec slist[MAXSTUFF]; 	int slistlen=0;
@@ -307,7 +312,7 @@ stuff translate[128] =
      /* \04x */ none, potion, none, none, none, none, none, none,
      /* \05x */ hitter, hitter, gold, none, amulet, none, none, wand,
      /* \06x */ none, none, none, none, none, none, none, none,
-     /* \07x */ none, none, food, none, none, ring, none, scroll,
+     /* \07x */ none, none, food, none, none, ring, none, Scroll,
      /* \10x */ none, none, none, none, none, none, none, none,
      /* \11x */ none, none, none, none, none, none, none, none,
      /* \12x */ none, none, none, none, none, none, none, none,
@@ -327,7 +332,7 @@ timerec timespent[50];
 /* End of the game messages */
 char *termination = "perditus";
 char *gamename = "Rog-O-Matic";
-char *roguename = "Rog-O-Matic                             ";
+char roguename[100];
 
 /* Used by onintr() to restart Rgm at top of command loop */
 jmp_buf  commandtop;
@@ -342,6 +347,8 @@ char *argv[];
 { char  ch, *s, *getenv(), *statusline(), msg[128];
   int startingup = 1;
   register int  i;
+
+  debuglog_open ("debuglog.player");
 
   /*
    * Initialize some storage
@@ -370,9 +377,13 @@ char *argv[];
     startreplay (&logfile, logfilename);
   }
   else
-  { frogue = fdopen (argv[1][0] - 'a', "r");
-    trogue = fdopen (argv[1][1] - 'a', "w");
-    setbuf (trogue, (char *) NULL);
+  {
+    int frogue_fd = argv[1][0] - 'a';
+    int trogue_fd = argv[1][1] - 'a';
+    open_frogue_fd (frogue_fd);
+    open_frogue_debuglog ("debuglog.frogue");
+    trogue = fdopen (trogue_fd, "w");
+    setbuf (trogue, NULL);
   }
 
   /* The second argument to player is the process id of Rogue */
@@ -395,6 +406,8 @@ char *argv[];
     while (len >= 0) argv[i][len--] = ' ';
   }
   parmstr = argv[0];	arglen--;
+  parmstr[arglen] = '\0';/* I don't like this business with muck with ps, but
+                            I think the lack of a null is a problem - NYM */
 
   /* If we are in one-line mode, then squirrel away stdout */
   if (emacs || terse)
@@ -449,19 +462,40 @@ char *argv[];
    * input after the next form feed, which signals the start of
    * the level drawing.
    */
-  
-  if (!replaying)
-    while ((int) (ch = GETROGUECHAR) != CL_TOK && (int) ch != EOF);
+  {
+    char *m = "More--";				/* FSM to check for '--More--' */
+    if (!replaying)
+      while ((int) (ch = getroguetoken ()) != CL_TOK && (int) ch != EOF)
+        {
+          debuglog ("main : got '%c' from getroguetoken\n",ch);
+          /* The rogue port seeme to randomly add a --More-- to the
+           * version string sometimes which causes this to block waiting
+           * for input from the rogue process, so send a space to clear
+           * the --More--, then continue - NYM
+           */
+/*          if (ch == *m)
+            {
+              if (*++m == '\0')
+                {
+                  debuglog ("main : got '--More--' in Version check\n");
+                  sendnow (" ");
+                }
+            }
+          else m = "More--";
+ */
+        }
+  }
 
   /* 
    * Note: If we are replaying, the logfile is now in synch
    */
+  debuglog ("main : getrogue (%s, 2)\n",ill);
 
   getrogue (ill, 2);  /* Read the input up to end of first command */
   
   /* Identify all 26 monsters */
   if (!replaying)
-    for (ch = 'A'; ch <= 'Z'; ch++) send ("/%c", ch);
+    for (ch = 'A'; ch <= 'Z'; ch++) rogo_send ("/%c", ch);
 
   /*
    * Signal handling. On an interrupt, Rogomatic goes into transparent
@@ -483,13 +517,17 @@ char *argv[];
   
   if (transparent) noterm = 0;
 
+  debuglog ("main : entering playing loop\n");
   while (playing) 
   { refresh ();
 
+    debuglog ("main : send commands\n");
     /* If we have any commands to send, send them */
     while (resend ())
     { if (startingup) showcommand (lastcmd);
-      sendnow (";"); getrogue (ill, 2);
+      sendnow (";");
+      debuglog ("main : getrogue (\"%s\", 2)\n",ill);
+      getrogue (ill, 2);
     }
     
     if (startingup)		/* All monsters identified */
@@ -497,6 +535,7 @@ char *argv[];
       startingup = 0;			/* Clear starting flag */
     }
     
+    debuglog ("main : check dead?\n");
     if (!playing) break;	/* In case we died */
 
     /*
@@ -508,6 +547,7 @@ char *argv[];
      * quit command.
      */
 
+    debuglog ("main : strategize\n");
     if ((transparent && !singlestep) ||
 	(!emacs && charsavail ()) ||
         !strategize())
@@ -519,7 +559,7 @@ char *argv[];
         case '\n': if (terse) 
 	           { printsnap (realstdout); fflush (realstdout); }
 	           else
-                   { singlestep = 1; transparent = 1; }
+                  { singlestep = 1; transparent = 1; }
 		   break;
 	           
         /* Rogue Command Characters */
@@ -675,13 +715,18 @@ char *argv[];
     }
   }
   
+  debuglog ("main : done playing %d\n",playing);
+
   if (! replaying)
   { saveltm (Gold);			/* Save new long term memory */
     endlesson ();			/* End genetic learning */  
   }
 
   /* Print termination messages */
-  at (23, 0); clrtoeol (); refresh ();
+  at (23, 0);
+  clrtoeol ();
+//  clear ();
+  refresh ();
   endwin (); nocrmode (); noraw (); echo ();
   
   if (emacs)  
@@ -718,6 +763,8 @@ char *argv[];
       printf ("Log file left on %s\n", ROGUELOG);
   }
 
+  debuglog_close ();
+
   exit (0);
 }
 
@@ -727,7 +774,7 @@ char *argv[];
  * and reset some goal variables.
  */
 
-onintr ()
+void onintr (int sig)
 { sendnow ("n\033");            /* Tell Rogue we don't want to quit */
   if (logging) fflush (fecho);  /* Print out everything */
   refresh ();                   /* Clear terminal output */
@@ -736,7 +783,7 @@ onintr ()
   transparent = 1;              /* Drop into transprent mode */
   interrupted = 1;              /* Mark as an interrupt */
   noterm = 0;                   /* Allow commands */
-  longjmp (commandtop);         /* Back to command Process */
+  longjmp (commandtop,0);       /* Back to command Process */
 }
 
 /*
@@ -749,18 +796,18 @@ startlesson ()
   sprintf (genepool, "%s/GenePool%d", RGMDIR, version);
   sprintf (genelock, "%s/GeneLock%d", RGMDIR, version);
 
-  srand (0);				/* Start random number generator */
+  rogo_srand (0);				/* Start random number generator */
   critical ();				/* Disable interrupts */
 
   /* Serialize access to the gene pool */
   if (lock_file (genelock, MAXLOCK))	/* Lock the gene pool */
-  { if (openlog (genelog) == NULL)	/* Open the gene log file */
+  { if (rogo_openlog (genelog) == NULL)	/* Open the gene log file */
       saynow ("Could not open file %s", genelog);
     if (! readgenes (genepool))		/* Read the gene pool */
       initpool (MAXKNOB, 20);		/* Random starting point */
     setknobs (&geneid, knob, &genebest, &geneavg); /* Select a genotype */
     writegenes (genepool);		/* Write out the gene pool */
-    closelog ();			/* Close the gene log file */
+    rogo_closelog ();			/* Close the gene log file */
     unlock_file (genelock);		/* Unlock the gene pool */
   }
   else
@@ -788,11 +835,11 @@ endlesson ()
   { critical ();			/* Disable interrupts */
 
     if (lock_file (genelock, MAXLOCK))	/* Lock the score file */
-    { openlog (genelog);		/* Open the gene log file */
+    { rogo_openlog (genelog);		/* Open the gene log file */
       if (readgenes (genepool))		/* Read the gene pool */
       { evalknobs (geneid,Gold,Level);	/* Add the trial to the pool */
         writegenes (genepool); }	/* Write out the gene pool */
-      closelog ();
+      rogo_closelog ();
       unlock_file (genelock);		/* Disable interrupts */
     }
     else 

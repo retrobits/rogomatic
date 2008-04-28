@@ -14,7 +14,7 @@
  */
 
 # include <stdio.h>
-# include <sys/types.h>
+# include <stdlib.h>
 # include "types.h"
 
 # define TRIALS(g)		((g)->score.count)
@@ -31,7 +31,6 @@ typedef struct
 extern int knob[];
 extern double mean(), stdev(), sqrt();
 extern FILE *wopen();
-extern char *malloc();
 
 static int inittime=0, trialno=0, lastid=0;
 static int crosses=0, shifts=0, mutations=0;
@@ -44,15 +43,30 @@ static double step = 0.33; /* standard deviations from the mean */
 static FILE *glog=NULL;
 
 static int compgene();
+static int randompool (register int m);
+static int printdna (FILE *f, register genotype *gene);
+static int summgene (register FILE *f, register genotype *gene);
+static int parsegene (register char *buf, register genotype *gene);
+static int writegene (register FILE *gfil, register genotype *g);
+static int initgene (register genotype *gene);
+static int birth (register FILE *f, register genotype *gene);
+static int cross (register int father, register int mother, register int new);
+static int mutate (register int father, register int new);
+static int shift (register int father, register int new);
+static int selectgene (register int e1, register int e2);
+static int unique (register int new);
+static int untested ();
+static int youngest ();
+static int makeunique (register int new);
+static int triangle (register int n);
+static int badgene (register int e1, register int e2);
 
 /*
  * Start a new gene pool
  */
 
 initpool (k, m)
-{ char *ctime();
-
-  inittime = time (0);
+{ inittime = time (0);
 
   if (glog) fprintf (glog, "Gene pool initalized, k %d, m %d, %s",
                      k, m, ctime (&inittime));
@@ -67,7 +81,6 @@ initpool (k, m)
 analyzepool (full)
 int full;
 { register int g;
-  char *ctime();
 
   qsort (genes, length, sizeof (*genes), compgene);
 
@@ -168,7 +181,7 @@ int gid, score, level;
  * openlog: Open the gene log file
  */
 
-FILE *openlog (genelog)
+FILE *rogo_openlog (genelog)
 register char *genelog;
 { glog = wopen (genelog, "a");    
   return (glog);
@@ -178,7 +191,7 @@ register char *genelog;
  * closelog: Close the log file
  */
 
-closelog ()
+void rogo_closelog ()
 { if (glog) fclose (glog);
 }
 
@@ -206,7 +219,7 @@ pickgenotype ()
   if (new < 0) return (youngest ());
  
   /* Shift a single genotype with probability pshift */
-  if (randint (100) < pshift)
+  if (rogo_randint (100) < pshift)
   { if (glog)
     { fprintf (glog, "Select: "); summgene (glog, genes[father]);
       fprintf (glog, "Death:  "); summgene (glog, genes[new]);
@@ -216,7 +229,7 @@ pickgenotype ()
   }
 
   /* Mutate a single genotype with probability pmutate */
-  else if (randint (100-pshift) < pmutate)
+  else if (rogo_randint (100-pshift) < pmutate)
   { if (glog)
     { fprintf (glog, "Select: "); summgene (glog, genes[father]);
       fprintf (glog, "Death:  "); summgene (glog, genes[new]);
@@ -476,10 +489,10 @@ register int father, mother, new;
   clearstat (&(genes[new]->level));
   
   /* Pick a crossover point and dominant parent */
-  cpoint = randint (MAXKNOB-1) + 1;
+  cpoint = rogo_randint (MAXKNOB-1) + 1;
 
   /* Fifty/fifty chance we swap father and mother */
-  if (randint (100) < 50)
+  if (rogo_randint (100) < 50)
   { father ^= mother; mother ^= father; father ^= mother; }
 
   /* Copy the dna over */
@@ -520,7 +533,7 @@ register int father, new;
 
   /* Randomly change genes until the new genotype is unique */
   do
-  { i=randint (MAXKNOB);
+  { i=rogo_randint (MAXKNOB);
     genes[new]->dna[i] = (genes[new]->dna[i] +
 			  triangle (20) + ALLELE) % ALLELE;
   } while (!unique (new));
@@ -582,7 +595,7 @@ register int m;
     }
     initgene (genes[g]);
     genes[g]->id = ++lastid;
-    for (i=0; i<MAXKNOB; i++) genes[g]->dna[i] = randint (ALLELE);
+    for (i=0; i<MAXKNOB; i++) genes[g]->dna[i] = rogo_randint (ALLELE);
     birth (glog, genes[g]);
   }
   
@@ -607,7 +620,7 @@ register int e1, e2;
   
   /* Pick a random number and find the corresponding gene */
   if (total > 0)
-  { for (g=0, total=randint (total); g<length; g++)
+  { for (g=0, total=rogo_randint (total); g<length; g++)
     { if (g==e1 || g==e2) continue;
       /* total -= (int) mean (&(genes[g]->score)); */
       total -= genes[g]->score.high;
@@ -616,7 +629,7 @@ register int e1, e2;
   }
 
   /* Total worth zero, pick any gene at random */
-  while ((g = randint (length))==e1 || g==e2) ;
+  while ((g = rogo_randint (length))==e1 || g==e2) ;
   return (g);
 }
 
@@ -651,7 +664,7 @@ register int new;
 static untested ()
 { register int g, y= -1, trials=1e9, newtrials, count=length;
   
-  for (g = randint (length); count-- > 0; g = (g+1) % length)
+  for (g = rogo_randint (length); count-- > 0; g = (g+1) % length)
   { if (TRIALS (genes[g]) >= trials) continue;
 
     newtrials = trialno - genes[g]->creation;	/* Turns since creation */
@@ -670,7 +683,7 @@ static untested ()
 static youngest ()
 { register int g, y=0, trials=1e9, newtrials, count=length;
   
-  for (g = randint (length); count-- > 0; g = (g+1) % length)
+  for (g = rogo_randint (length); count-- > 0; g = (g+1) % length)
   { newtrials = TRIALS (genes[g]);
     if (newtrials < trials) { y=g; trials=newtrials; }
   }
@@ -687,7 +700,7 @@ register int new;
 { register int i;
 
   while (!unique (new))
-  { i=randint (MAXKNOB);
+  { i=rogo_randint (MAXKNOB);
     genes[new]->dna[i] = (genes[new]->dna[i] +
 		          triangle (20) + ALLELE) % ALLELE;
   }
@@ -702,7 +715,7 @@ register int n;
 { register int val;
 
   do
-  { val = randint (n) - randint (n);
+  { val = rogo_randint (n) - rogo_randint (n);
   } while (val==0);
   
   return (val);

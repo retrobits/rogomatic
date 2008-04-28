@@ -6,7 +6,9 @@
  */
 
 # include <stdio.h>
+# include <stdlib.h>
 # include <signal.h>
+# include <unistd.h>
 # include "install.h"
 
 # define READ    0
@@ -103,9 +105,14 @@ char *argv[];
     close (1);
     dup (ctp[WRITE]);
 
-    putenv ("TERMCAP", ROGUETERM);
-    putenv ("TERM", "rg");
-    putenv ("ROGUEOPTS", ropts);
+    if (setenv ("TERM", "vt100", 1) != 0)
+      {
+        fprintf (stderr, "can't setenv (\"TERM\", \"vt100\", 1)\n");
+      }
+    if (setenv ("ROGUEOPTS", ropts, 1) != 0)
+      {
+        fprintf (stderr, "can't setenv (\"ROGUEOPTS\", \"%s\", 1)\n",ropts);
+      }
 
     if (oldgame)  execl (rfile, rfile, "-r", 0);
     if (argc)     execl (rfile, rfile, argv[0], 0);
@@ -115,8 +122,12 @@ char *argv[];
 
   else
   { /* Encode the open files into a two character string */
+    char ft[3];
+    char rp[32];
 
-    char *ft = "aa", rp[32]; ft[0] += frogue; ft[1] += trogue;
+    ft[0] = 'a' + frogue;
+    ft[1] = 'a' + trogue;
+    ft[2] = '\0';
 
     /* Pass the process ID of the Rogue process as an ASCII string */
     sprintf (rp, "%d", child);
