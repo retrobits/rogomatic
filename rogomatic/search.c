@@ -357,7 +357,7 @@ char dir[24][80];
         moveval[r][c] = val;
 	movecont[r][c] = cont;
 
-        if (avd >= INFINITY)
+        if (avd >= ROGINFINITY)
         { /* Infinite avoidance */
 	  dir[r][c]=UNREACHABLE;  /* we cant get here */
 	  continue;	/* discard the square from consideration. */

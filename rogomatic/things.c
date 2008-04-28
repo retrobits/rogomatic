@@ -25,6 +25,7 @@ int obj;
   if (cursedarmor) return (0);
 
   command (T_HANDLING, "W%c", LETTER (obj));
+  debuglog ("things : wear : usesynch = 0\n");
   usesynch = 0;
   return (1);
 }
@@ -43,6 +44,7 @@ takeoff ()
   if (cursedarmor) return (0);
 
   command (T_HANDLING, "T");
+  debuglog ("things : takeoff : usesynch = 0\n");
   usesynch = 0;
   return (1);
 }
@@ -56,6 +58,9 @@ int obj;
 {
   if (cursedweapon) return (0);
 
+  /* send 2 escapes because I needed to patch the new rogue to not hang
+   * momentatirily on the first escape
+   */
   if (version < RV53A)
     command (T_HANDLING, "w%cw%c%c", LETTER (obj), ESC, ctrl('r'));
   else
@@ -81,7 +86,7 @@ int obj;
     return (0);
 
   /* read unknown scrolls or good scrolls rather than dropping them */
-  if (inven[obj].type == scroll &&
+  if (inven[obj].type == Scroll &&
       (!itemis (obj, KNOWN) ||
        stlmatch (inven[obj].str, "identify") &&
 	   prepareident (pickident (), obj) ||
@@ -123,6 +128,8 @@ int obj;
 {
   if (inven[obj].type != potion)
   { dwait (D_ERROR, "Trying to quaff %c", LETTER (obj)); 
+
+    debuglog ("things : quaff : usesynch = 0\n");
     usesynch = 0;
     return (0); 
   }
@@ -138,8 +145,9 @@ int obj;
 reads (obj)
 int obj;
 {
-  if (inven[obj].type != scroll)
+  if (inven[obj].type != Scroll)
   { dwait (D_ERROR, "Trying to read %c", LETTER (obj)); 
+    debuglog ("things : reads : usesynch = 0\n");
     usesynch = 0;
     return (0); 
   }
@@ -233,6 +241,7 @@ addstuff (ch, row, col)
 char  ch;
 int   row, col;
 { /* if (seerc ('@', row, col)) return (0); */ /* Removed MLM 10/28/83 */
+  debuglog ("things : addstuff ('%c') at %d, %d\n",ch, row, col);
   if (onrc (STUFF, row, col))
     deletestuff (row, col);
   slist[slistlen].what = translate[ch];
@@ -249,6 +258,7 @@ int   row, col;
 deletestuff (row, col)
 int   row, col;
 { register int   i;
+  debuglog ("things : deletestuff () at %d, %d\n",row, col);
   unsetrc (STUFF, row, col);
   for (i = 0; i < slistlen; ++i)
     if (slist[i].scol == col && slist[i].srow == row)
@@ -288,8 +298,12 @@ char *s;
 
 prepareident (obj, iscroll)
 int obj, iscroll;
-{ nextid = LETTER (obj);
+{
+  debuglog ("things : prepareident (%d, %d)\n",obj,iscroll); 
+  debuglog ("things : afterid %d\n",afterid); 
+  nextid = LETTER (obj);
   afterid = (iscroll > obj || inven[iscroll].count > 1) ? nextid : nextid-1;
+  debuglog ("things : afterid %d\n",afterid); 
   return (nextid >= 'a' && afterid >= 'a');
 }
 
@@ -304,7 +318,7 @@ int pickident ()
 
   if      ((obj=unknown      (ring))   != NONE);
   else if ((obj=unidentified (wand))   != NONE);
-  else if ((obj=unidentified (scroll)) != NONE);
+  else if ((obj=unidentified (Scroll)) != NONE);
   else if ((obj=unidentified (potion)) != NONE);
   else if ((obj=unknown      (scroll)) != NONE);
   else if ((obj=unknown      (potion)) != NONE);

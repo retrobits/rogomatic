@@ -14,6 +14,7 @@
  */
 
 # include <stdio.h>
+# include <stdlib.h>
 # include "types.h"
 # include "install.h"
 
@@ -74,11 +75,11 @@ char *argv[];
   critical ();				/* Disable interrupts */
   if (lock_file (genelock, MAXLOCK))
   { if (init) 
-    { srand (seed);			/* Set the random number generator */
-      openlog (genelog);		/* Open the gene log file */
+    { rogo_srand (seed);			/* Set the random number generator */
+      rogo_openlog (genelog);		/* Open the gene log file */
       initpool (MAXKNOB, m);		/* Random starting point */
       writegenes (genepool);		/* Write out the gene pool */
-      closelog ();			/* Close the log file */
+      rogo_closelog ();			/* Close the log file */
     }
     else if (! readgenes (genepool))	/* Read the gene pool */
       quit (1, "Cannot read file '%s'\n", genepool);

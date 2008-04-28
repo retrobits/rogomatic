@@ -14,6 +14,7 @@
  */
 
 # include <curses.h>
+# include <string.h>
 # include "types.h"
 # include "globals.h"
 

@@ -8,6 +8,7 @@
 
 # include <curses.h>
 # include <math.h>
+# include <string.h>
 # include "types.h"
 # include "globals.h"
 # include "install.h"

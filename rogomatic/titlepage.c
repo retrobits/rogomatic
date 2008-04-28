@@ -75,7 +75,7 @@ char *movie[];
 
   if (emacs || terse) return;		/* No screen ==> no movie */
 
-  baud = baudrate ();
+  baud = rogo_baudrate ();
   if (baud == 0) baud = 4800;
   if (baud > 9600) baud = 9600;
   delaychars = baud / 200;

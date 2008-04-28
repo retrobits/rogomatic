@@ -24,13 +24,15 @@ register char *rogue, *roguename;
   char cmd[100], buffer[BUFSIZ];
   register char *s, *tmpfname = TEMPFL;
   FILE *tmpfil;
+  char tmpbuffer[256];
+  snprintf (tmpbuffer, 256, "%s", tmpfname);
 
   /* Run 'rogue -s', and put the scores into a temp file */
-  sprintf (cmd, "%s -s >%s", rogue, mktemp (tmpfname)); 
+  sprintf (cmd, "%s -s >%s", rogue, mktemp (tmpbuffer)); 
   system (cmd); 
 
   /* If no temp file created, return default score */
-  if ((tmpfil = fopen (tmpfname, "r")) == NULL)
+  if ((tmpfil = fopen (tmpbuffer, "r")) == NULL)
     return (best); 
 
   /* Skip to the line starting with 'Rank...'. */
@@ -57,7 +59,7 @@ register char *rogue, *roguename;
     }
   }
 
-  unlink (tmpfname); 
+  unlink (tmpbuffer);
 
   /* Don't quit for very small scores, it's not worth it */
   if (best < 2000) best = -1;

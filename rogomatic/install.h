@@ -32,7 +32,7 @@
  * defined, and can be either "5.2", "3.6", or "5.3"
  */
 
-# define DEFVER		"5.3"
+# define DEFVER		"3.6"
 
 /* 
  * This file is created whenever the Rog-O-Matic score file is accessed to
@@ -40,7 +40,7 @@
  * not be used unless RGMDIR is also defined.
  */
 
-# define LOCKFILE	"/tmp/Rgm Lock"
+# define LOCKFILE	"/Users/molinaro/Desktop/roguelikes/rogo1/rlog/RgmLock"
 
 /* 
  * This variable is the level at which we always start logging the game
@@ -66,7 +66,7 @@
  * defined.
  */
 
-# define NEWROGUE	"/usr/mlm/bin/rogue" 
+# define NEWROGUE	"/usr/games/rogue" 
 
 /* 
  * This is the location of the player executable, which is the main
@@ -76,7 +76,7 @@
  * directory).
  */
 
-# define PLAYER		"/usr/mlm/bin/player"
+# define PLAYER		"/usr/src/Games/Rogue/RogOMatic/player"
 
 /* 
  * This is the version of the "current" Rog-O-Matic, and is an uppercase
@@ -111,7 +111,7 @@
  * directory.
  */
 
-# define RGMDIR		"/usr/mlm/lib/rogomatic"
+# define RGMDIR		"/Users/molinaro/Desktop/roguelikes/rogo1/rlog"
 
 /* 
  * This file is created in the current directory if the snapshot command

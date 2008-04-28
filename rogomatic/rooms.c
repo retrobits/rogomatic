@@ -40,6 +40,7 @@ newlevel ()
   foundarrowtrap = foundtrapdoor = 0;   /* Old traps are gone */
   teleported = 0;			/* Not teleported yet */
   attempt = 0;				/* Haven't search for doors yet */
+  debuglog ("rooms : newlevel : usesynch = 0\n");
   usesynch = 0;				/* Force a new inventory */
   compression = Level < 13;		/* Set move compression */
   newarmor = newweapon = newring = 1;	/* Reevaluate our items */
@@ -225,7 +226,7 @@ lightroom ()
   if (blinded || !darkroom ())
     return (0);
 
-  if ((obj = havenamed (scroll, "light")) >=0 && reads (obj))
+  if ((obj = havenamed (Scroll, "light")) >=0 && reads (obj))
     return (1);
 
   if ((obj = havewand ("light")) >=0 && point (obj, 0))
@@ -450,6 +451,7 @@ register int row, col;
   int   unseen = !onrc (SEEN, row, col);
   int   rm = whichroom (row, col);
 
+  debuglog ("rooms : updatepos (%c, %d, %d)\n",ch, row, col);
   if (mlistlen && ch != oldch) deletemonster (row, col);
   if (unseen) { foundnew (); }
 

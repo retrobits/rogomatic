@@ -151,7 +151,7 @@ int i;
     return (1);
 
   /* So are many scrolls */
-  if (inven[i].type == scroll && itemis (i, KNOWN) &&
+  if (inven[i].type == Scroll && itemis (i, KNOWN) &&
       (stlmatch (inven[i].str, "blank") ||
        stlmatch (inven[i].str, "create monster") ||
        stlmatch (inven[i].str, "sleep") ||

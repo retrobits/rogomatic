@@ -11,6 +11,9 @@
  */
 
 # include <stdio.h>
+# include <stdlib.h>
+# include <string.h>
+
 # define SKIPARG	while (*++(*argv)); --(*argv)
 
 # define BWIDTH 200
