@@ -1,24 +1,83 @@
 # put whatever (auto)make commands here, they will be included from Makefile.am
 #
-lib_LTLIBRARIES =		\
-  libmylib.la
+#lib_LTLIBRARIES =
+#
+#libmylib_la_SOURCES =
+#
+#libmylib_la_LIBADD = 		\
+#  @FW_PKGCONFIG_PREREQS_LIBS@
+#
+#libmylib_la_LDFLAGS = 	\
+#  -version-info @FW_PACKAGE_MAJOR_VERSION@:@FW_PACKAGE_MINOR_VERSION@:0
 
-libmylib_la_SOURCES = 		\
-  mylib.c
+bin_PROGRAMS = \
+  player       \
+  rogomatic
 
-libmylib_la_LIBADD = 		\
-  @FW_PKGCONFIG_PREREQS_LIBS@
+player_SOURCES = \
+  arms.c         \
+  command.c      \
+  database.c     \
+  debug.c        \
+  explore.c      \
+  io.c           \
+  learn.c        \
+  ltm.c          \
+  main.c         \
+  mess.c         \
+  monsters.c     \
+  pack.c         \
+  rand.c         \
+  replay.c       \
+  rooms.c        \
+  scorefile.c    \
+  search.c       \
+  stats.c        \
+  strategy.c     \
+  survival.c     \
+  tactics.c      \
+  things.c       \
+  titlepage.c    \
+  utility.c      \
+  worth.c        \
+  getroguetoken.c\
+  debuglog.c
 
-libmylib_la_LDFLAGS = 	\
-  -version-info @FW_PACKAGE_MAJOR_VERSION@:@FW_PACKAGE_MINOR_VERSION@:0
+rogomatic_SOURCES = \
+  setup.c           \
+  findscore.c       \
+  scorefile.c       \
+  utility.c
 
-bin_PROGRAMS =		\
-  myprog
+noinst_PROGRAMS = \
+  rgmplot         \
+  datesub         \
+  histplot        \
+  gene
 
-myprog_SOURCES =	\
-  myprog.c
+rgmplot_SOURCES = \
+  rgmplot.c       \
+  utility.c
 
-myprog_LDADD =		\
-  libmylib.la
+datesub_SOURCES = \
+  datesub.c
+
+histplot_SOURCES = \
+  histplot.c \
+  utility.c
+
+gene_SOURCES = \
+  gene.c       \
+  rand.c       \
+  learn.c      \
+  stats.c      \
+  utility.c
+
+# special case for lex output
+datesub.c: datesub.l
+	lex datesub.l
+	mv lex.yy.c datesub.c
+
+CLEANFILES += datesub.c
 
 MAINTAINERCLEANFILES += config.h.in

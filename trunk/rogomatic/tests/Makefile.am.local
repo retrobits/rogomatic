@@ -1,12 +1,9 @@
 # put whatever (auto)make commands here, they will be included from Makefile.am
 
-check_PROGRAMS =			\
-  testprog
+#check_PROGRAMS =
 
-testprog_SOURCES =			\
-  testprog.c
+#testprog_SOURCES =
 
-TESTS =					\
-  $(check_PROGRAMS)
+TESTS =
 
 MAINTAINERCLEANFILES += test-wrapper.sh.in
