@@ -3,8 +3,8 @@
 
 FW_PACKAGE_NAME="rogomatic"
 FW_PACKAGE_VERSION="0.0.0"
-FW_PACKAGE_MAINTAINER="molinaro <molinaro@molinaro-maclt.local>"
-FW_PACKAGE_SHORT_DESCRIPTION="A short description."
+FW_PACKAGE_MAINTAINER="Anthony Molinaro <anthonym@alumni.caltech.edu>"
+FW_PACKAGE_SHORT_DESCRIPTION="An automatic rogue player."
 FW_PACKAGE_DESCRIPTION=`cat README`
 FW_PACKAGE_ARCHITECTURE_DEPENDENT="1"
 
