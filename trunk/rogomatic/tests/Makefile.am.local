@@ -8,3 +8,5 @@ testprog_SOURCES =			\
 
 TESTS =					\
   $(check_PROGRAMS)
+
+MAINTAINERCLEANFILES += test-wrapper.sh.in
