@@ -1,2 +1,8 @@
 dnl -- include additional autoconf commands here
 dnl -- do not include AC_OUTPUT, this is called for you
+
+dnl AC_CHECK_HEADER(curses.h, , AC_MSG_ERROR([Cannot find curses.h, and rogomatic requires it]))
+
+AC_CHECK_LIB(curses, initscr, , AC_MSG_ERROR([Cannot find ncurses]))
+
+dnl AC_CHECK_LIB(m, log, , AC_MSG_ERROR([Cannot find m]))

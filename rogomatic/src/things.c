@@ -320,7 +320,7 @@ int pickident ()
   else if ((obj=unidentified (wand))   != NONE);
   else if ((obj=unidentified (Scroll)) != NONE);
   else if ((obj=unidentified (potion)) != NONE);
-  else if ((obj=unknown      (scroll)) != NONE);
+  else if ((obj=unknown      (Scroll)) != NONE);
   else if ((obj=unknown      (potion)) != NONE);
   else if ((obj=unknown      (hitter)) != NONE);
   else obj = 0;
