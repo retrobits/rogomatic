@@ -1,30 +1,27 @@
 /*
- * main.c: Rog-O-Matic XIV (CMU) Sat Mar  7 12:48:37 1987 - mlm
+ * Rog-O-Matic
+ * Automatically exploring the dungeons of doom.
+ *
+ * Copyright (C) 2008 by Anthony Molinaro
+ * Copyright (C) 1985 by Appel, Jacobson, Hamey, and Mauldin.
+ *
+ * This file is part of Rog-O-Matic.
+ *
+ * Rog-O-Matic is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Rog-O-Matic is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Rog-O-Matic.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*=========================================================================
- * Rog-O-Matic XIV
- * Automatically exploring the dungeons of doom
- * Copyright (C) 1985 by Appel, Jacobson, Hamey, and Mauldin
- *
- * The right is granted to any person, university, or company 
- * to copy, modify, or distribute (for free) these files,
- * provided that any person receiving a copy notifies Michael Mauldin
- *
- * (1) by electronic mail to	Mauldin@CMU-CS-A.ARPA		or
- *
- * (2) by US Mail to		Michael Mauldin
- *				Dept. of Computer Science
- *				Carnegie-Mellon University
- *				Pittsburgh, PA  15213
- *
- * All other rights, including those of publication and sale, are reserved.
- *========================================================================/
-
 /*****************************************************************
- * EDITLOG
- *	LastEditDate = Sat Mar  7 12:48:36 1987 - Michael Mauldin
- *	LastFileName = /usre3/mlm/src/rog/ver14/main.c
  *
  * History:     I.    Andrew Appel & Guy Jacobson, 10/81 [created]
  *              II.   Andrew Appel & Guy Jacobson, 1/82  [added search]
@@ -40,6 +37,7 @@
  *              XII.  Hamey, Mauldin,  06/83             [Fixes, New Replay]
  *              XIII. Mauldin, Hamey,  11/83             [Fixes, Rogue 5.3]
  *              XIV.  Mauldin          01/85             [Fixes, UT mods]
+ *              0.0.0 Anthony Molinaro 03/2008           [Restored]
  *
  * General:
  *

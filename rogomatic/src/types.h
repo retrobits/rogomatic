@@ -1,16 +1,30 @@
 /*
- * types.h: Rog-O-Matic XIV (CMU) Sat Mar  7 12:40:14 1987 - mlm
- * Copyright (C) 1985 by A. Appel, G. Jacobson, L. Hamey, and M. Mauldin
+ * Rog-O-Matic
+ * Automatically exploring the dungeons of doom.
  *
- * Miscellaneous Macros and Constants 
+ * Copyright (C) 2008 by Anthony Molinaro
+ * Copyright (C) 1985 by Appel, Jacobson, Hamey, and Mauldin.
  *
- * EDITLOG
- *	LastEditDate = Sat Mar  7 12:40:14 1987 - Michael Mauldin
- *	LastFileName = /usre3/mlm/src/rog/ver14/types.h
+ * This file is part of Rog-O-Matic.
  *
- * HISTORY
- *  7-Mar-87  Michael Mauldin (mlm) at Carnegie-Mellon University
- *	Created.
+ * Rog-O-Matic is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Rog-O-Matic is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Rog-O-Matic.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*
+ * types.h:
+ *
+ * Miscellaneous Macros and Constants
  */
 
 /* Global Preprocessor constants */

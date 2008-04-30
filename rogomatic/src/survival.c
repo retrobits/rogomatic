@@ -1,21 +1,38 @@
 /*
- * survival.c: Rog-O-Matic XIV (CMU) Sat Mar  7 12:29:22 1987 - mlm
- * Copyright (C) 1985 by A. Appel, G. Jacobson, L. Hamey, and M. Mauldin
+ * Rog-O-Matic
+ * Automatically exploring the dungeons of doom.
+ *
+ * Copyright (C) 2008 by Anthony Molinaro
+ * Copyright (C) 1985 by Appel, Jacobson, Hamey, and Mauldin.
+ *
+ * This file is part of Rog-O-Matic.
+ *
+ * Rog-O-Matic is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Rog-O-Matic is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Rog-O-Matic.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*
+ * survival.c:
  *
  * This file contains all of the "Run Away" code.
  * Well, almost all of the run away code.
  * At least I think it has something to do with running away.
  *
- * EDITLOG
- *	LastEditDate = Sat Mar  7 12:29:22 1987 - Michael Mauldin
- *	LastFileName = /usre3/mlm/src/rog/ver14/survival.c
- *
- * HISTORY
- *  7-Mar-87  Michael Mauldin (mlm) at Carnegie-Mellon University
- *	Modified markcycles() to check for choke points in corridors,
- *	as possible RUNOK squares, in addition to doors.  This fixes the
- *	bug where a cycle through corridors was not noticed because
- *	there was no door there.
+ * 7-Mar-87  Michael Mauldin (mlm) at Carnegie-Mellon University
+ * Modified markcycles() to check for choke points in corridors,
+ * as possible RUNOK squares, in addition to doors.  This fixes the
+ * bug where a cycle through corridors was not noticed because
+ * there was no door there.
  */
 
 # include <stdio.h>
