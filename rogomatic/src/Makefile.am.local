@@ -20,3 +20,5 @@ myprog_SOURCES =	\
 
 myprog_LDADD =		\
   libmylib.la
+
+MAINTAINERCLEANFILES += config.h.in
