@@ -1,24 +1,23 @@
 # put whatever (auto)make commands here, they will be included from Makefile.am
 #
-lib_LTLIBRARIES =		\
-  libmylib.la
+bin_PROGRAMS =      \
+  rogue36
 
-libmylib_la_SOURCES = 		\
-  mylib.c
+rogue36_SOURCES =   \
+  vers.c armor.c chase.c command.c daemon.c daemons.c fight.c \
+  init.c io.c list.c main.c mdport.c misc.c monsters.c move.c newlevel.c \
+  options.c pack.c passages.c potions.c rings.c rip.c rooms.c \
+  save.c scrolls.c state.c sticks.c things.c weapons.c wizard.c xcrypt.c
 
-libmylib_la_LIBADD = 		\
-  @FW_PKGCONFIG_PREREQS_LIBS@
-
-libmylib_la_LDFLAGS = 	\
-  -version-info @FW_PACKAGE_MAJOR_VERSION@:@FW_PACKAGE_MINOR_VERSION@:0
-
-bin_PROGRAMS =		\
-  myprog
-
-myprog_SOURCES =	\
-  myprog.c
-
-myprog_LDADD =		\
-  libmylib.la
+EXTRA_DIST +=       \
+  LICENSE.TXT       \
+  readme36.html     \
+  rogue.6           \
+  rogue.r           \
+  rogue36.cat       \
+  rogue36.doc       \
+  rogue36.html      \
+  rogue36.sln       \
+  rogue36.vcproj
 
 MAINTAINERCLEANFILES += config.h.in
