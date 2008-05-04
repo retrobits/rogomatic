@@ -1,2 +1,7 @@
 dnl -- include additional autoconf commands here
 dnl -- do not include AC_OUTPUT, this is called for you
+
+AC_CHECK_LIB(curses, initscr, , AC_MSG_ERROR([Cannot find ncurses]))
+
+# turn off hardcore, since I'm just repackaging this code
+enable_hardcore=no
