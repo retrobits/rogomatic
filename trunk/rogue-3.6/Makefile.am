@@ -1,4 +1,4 @@
-SUBDIRS = src
+SUBDIRS = src tests fw-pkgin
 
 memcheck:
 	cd tests && $(MAKE) memcheck
@@ -22,6 +22,7 @@ MAINTAINERCLEANFILES = \
   config.status        \
   config.sub           \
   configure            \
+  configure.ac         \
   create-package       \
   depcomp              \
   fw                   \
@@ -31,6 +32,7 @@ MAINTAINERCLEANFILES = \
   libtool              \
   ltmain.sh            \
   missing              \
-  pkgconfig-template.pc.in
+  pkgconfig-template.pc.in \
+  *.tar.gz
 
 include $(top_srcdir)/Makefile.am.local
