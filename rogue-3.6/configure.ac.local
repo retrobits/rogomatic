@@ -5,3 +5,8 @@ AC_CHECK_LIB(curses, initscr, , AC_MSG_ERROR([Cannot find ncurses]))
 
 # turn off hardcore, since I'm just repackaging this code
 enable_hardcore=no
+
+AC_PROG_CC
+AC_LANG(C)
+
+# AC_CONFIG_FILES([src/Makefile])

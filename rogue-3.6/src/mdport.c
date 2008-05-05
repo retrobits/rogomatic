@@ -1021,6 +1021,7 @@ md_readchar(WINDOW *win)
     int mode = M_NORMAL;
     int mode2 = M_NORMAL;
 
+#if defined(_WIN32)
     for(;;)
     {
         ch = wgetch(win);
@@ -1247,4 +1248,16 @@ md_readchar(WINDOW *win)
     raw();
 
     return(ch & 0x7F);
+#else
+    ch = wgetch(win);
+
+    switch(ch)
+      {
+        #ifdef KEY_BACKSPACE /* NCURSES in Keypad mode sends this for Ctrl-H */
+                    case KEY_BACKSPACE: ch = CTRL('H'); break;
+        #endif
+      }
+
+    return (ch);
+#endif
 }
