@@ -47,9 +47,6 @@
 # define SUCCESS	(1)
 # define FAILURE	(0)
 
-# define ISPRT(c)	((c) >= ' ' && (c) <= '~')
-# define GETLOGCHAR	fgetc(logfile)
-
 /*
  * Magic numbers for Invisible stalker strategies
  */

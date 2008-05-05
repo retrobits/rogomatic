@@ -53,7 +53,8 @@ noinst_PROGRAMS = \
   rgmplot         \
   datesub         \
   histplot        \
-  gene
+  gene            \
+  deciphervt100
 
 rgmplot_SOURCES = \
   rgmplot.c       \
@@ -72,6 +73,11 @@ gene_SOURCES = \
   learn.c      \
   stats.c      \
   utility.c
+
+deciphervt100_SOURCES = \
+  deciphervt100.c       \
+  getroguetoken.c       \
+  debuglog.c
 
 # special case for lex output
 datesub.c: datesub.l

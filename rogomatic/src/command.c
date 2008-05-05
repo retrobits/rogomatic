@@ -106,19 +106,12 @@ int tmode, a1, a2, a3, a4;
     if (streq (lastcom, cmd))
     {
       comcount++;
-      debuglog ("command : match %d\n",comcount);
       if (streq (cmd, "i") && comcount > 3)
         dwait (D_FATAL, "command: cannot synchronize inventory, invcount %d.",
                invcount);
-//      if (comcount > 100)
-//        {
-//          debuglog ("command : '%s' repeated more than 100 times!\n",cmd);
-//          dwait (D_FATAL, "command : %s repeated more than 100 times!\n",cmd);
-//        }
     }
     else
     {
-      debuglog ("command : not match\n");
       strcpy (lastcom, cmd);
       comcount = 1;
     }
@@ -195,7 +188,6 @@ char *cmd;
 
   switch (functionchar (cmd))
   { case 'd':	setrc (STUFF | USELESS, atrow, atcol);
-        debuglog ("command : adjustpack\n");
 		deleteinv (OBJECT (commandarg (cmd, 1)));
 		break;
 

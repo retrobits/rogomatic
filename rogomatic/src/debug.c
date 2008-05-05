@@ -54,11 +54,6 @@ int msgtype, a1, a2, a3, a4, a5, a6, a7, a8;
   /* Build the actual message */
   sprintf (msg, f, a1, a2, a3, a4, a5, a6, a7, a8);
 
-  if (msgtype & D_FATAL)
-    {
-      debuglog ("dwait ([%s])\n",msg);
-    }
-
   /* Log the message if the error is severe enough */
   if (!replaying && (msgtype & (D_FATAL | D_ERROR | D_WARNING)))
   { char errfn[128]; FILE *errfil;

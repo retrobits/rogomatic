@@ -174,34 +174,28 @@ int   onat;                             /* 0 ==> Wait for waitstr
   q = "(* for list): ";			/* FSM to check for prompt */
   d = ")______";			/* FSM to check for tombstone grass */
 
-  debuglog ("getrogue : 1\n");
   if (moved)				/* If we moved last time, put any */
   { sleepmonster (); moved = 0; }	/* Old monsters to sleep */
 
-  debuglog ("getrogue : 2\n");
   /* While we have not reached the end of the Rogue input, read */
   /* characters from Rogue and figure out what they mean.       */
   while ((*s) ||
          ((!hasted || version != RV36A) && onat && screen[row][col] != '@'))
   {
-    debuglog ("getrogue : 3\n");
     ch = getroguetoken ();
 
-    debuglog ("getrogue : 4\n");
     /* If message ends in "(* for list): ", call terpmes */
     if (ch == *q) { if (*++q == 0) terpmes (); }
     else q = "(* for list): ";
 
-    debuglog ("getrogue : 5\n");
     /* Rogomatic now keys off of the grass under the Tombstone to  */
     /* detect that it has been killed. This was done because the   */
     /* "Press return" prompt only happens if there is a score file */
     /* Available on that system. Hopefully the grass is the same   */
     /* in all versions of Rogue!                                   */
-    if (ch == *d) { if (0 == *++d) { addch (ch); deadrogue (); return;} }
+    if (ch == *d) { if (0 == *++d) { addch (ch); deadrogue (); return; } }
     else d = ")_______";
 
-    debuglog ("getrogue : 6\n");
     /* If the message has a more, strip it off and call terpmes */
     if (ch == *m)
     { if (*++m == 0)
@@ -228,7 +222,6 @@ int   onat;                             /* 0 ==> Wait for waitstr
     }
     else m = "More--";
 
-    debuglog ("getrogue : 7\n");
     /* If the message is 'Call it:', cancel the request */
     if (ch == *call)
     { if (*++call == 0)
@@ -239,11 +232,9 @@ int   onat;                             /* 0 ==> Wait for waitstr
     }
     else call = "Call it:";
 
-    debuglog ("getrogue : 8\n");
     /* Check to see whether we have read the synchronization string */
     if (*s) { if (ch == *s) s++; else s = waitstr; }
 
-    debuglog ("getrogue : 9\n");
     /* Now figure out what the token means */
     switch (ch)
     { case BS_TOK: 
@@ -305,11 +296,6 @@ int   onat;                             /* 0 ==> Wait for waitstr
         col = 0;
         debuglog ("CR_TOK      [%2d, %2d] [%c]\n", row, col, screen[row][col]);
         break;
-
-//      case DO_TOK:
-//        row++;
-//        debuglog ("DO_TOK      [%2d, %2d] [%c]\n", row, col, screen[row][col]);
-//        break;
 
       case ER_TOK: 
         break;
@@ -415,14 +401,10 @@ int   onat;                             /* 0 ==> Wait for waitstr
         debuglog ("OTHER   [%c] [%2d, %2d] [%c]\n", ch, row, (col-1), screen[row][col-1]);
         break;
     }
-
-    debuglog ("getrogue : 10 : usesynch = %d\n",usesynch);
   }
 
-  debuglog ("getrogue : 11\n");
   if (botprinted) terpbot ();
 
-  debuglog ("getrogue : 12\n");
   if (atrow != atrow0 || atcol != atcol0) 
   { updateat ();	/* Changed position, record the move */
     moved = 1;		/* Indicate that we moved */
@@ -430,20 +412,16 @@ int   onat;                             /* 0 ==> Wait for waitstr
     currentrectangle();	/* Keep current rectangle up to date.   LGCH */
   }
 
-  debuglog ("getrogue : 13\n");
   if (!usesynch && !pending ()) 
   {
-    debuglog ("io : getrogue : usesynch = 1\n");
     usesynch = 1;
     lastobj = NONE;
     resetinv();
   }
 
-  debuglog ("getrogue : 14\n");
   if (version < RV53A && checkrange && !pending ())
   { command (T_OTHER, "Iz"); checkrange = 0; }
  
-  debuglog ("getrogue : 15\n");
   /* If mapping status has changed */
   if (wasmapped != didreadmap)
   { dwait (D_CONTROL | D_SEARCH, "wasmapped: %d   didreadmap: %d",
@@ -452,7 +430,6 @@ int   onat;                             /* 0 ==> Wait for waitstr
     mapinfer ();
   }
 
-  debuglog ("getrogue : 16\n");
   if (didreadmap != Level)
   { doors = doorlist;
     while (doors != newdoors)
@@ -462,7 +439,6 @@ int   onat;                             /* 0 ==> Wait for waitstr
     }
   }
 
-  debuglog ("getrogue : 17\n");
   if (!blinded)
     for (i = atrow-1; i <= atrow+1; i++)         /* For blanks around the  */
       for (j = atcol-1; j <= atcol+1; j++)       /* rogue...               */
@@ -471,14 +447,11 @@ int   onat;                             /* 0 ==> Wait for waitstr
 	  setnewgoal ();		         /* invalidate the map.    */
 	}
 
-  debuglog ("getrogue : 18\n");
   at (row, col); 
   if (!emacs && !terse) refresh ();
 
-  debuglog ("getrogue : 19\n");
   printscreen ();
 
-  debuglog ("getrogue : 20\n");
 }
 
 /*
@@ -634,13 +607,12 @@ int a1, a2, a3, a4;
 
 sendcnow (c)
 char c;
-{ if (replaying) return;
-  if (logging)
-  { if (cecho)
-      { fprintf (fecho, "\nC: \"%c", c); cecho = !cecho; }
-    else
-      fprintf (fecho, "%c", c);
-  }
+{
+  if (replaying)
+    return;
+
+  rogue_log_write_command (c);
+
   fprintf (trogue, "%c", c);
 }
 
@@ -803,7 +775,10 @@ int terminationtype;            /* SAVED, FINSISHED, or DIED */
 
   /* Send the requisite handshaking to Rogue */
   if (terminationtype == DIED)
-    sendnow ("\n");
+    if (version == RV54A)
+      sendnow ("\n\n");
+    else
+      sendnow ("\n");
   else if (terminationtype == FINISHED)
     sendnow ("Qy\n");
   else
@@ -966,8 +941,6 @@ getrogver ()
     *--vstr = '\0';
   }
 
-  debuglog ("versionstr = %s\n", versionstr);
-
   if (stlmatch (versionstr, "3.6"))		version = RV36B;
   else if (stlmatch (versionstr, "5.2"))	version = RV52A;
   else if (stlmatch (versionstr, "5.3"))	version = RV53A;
@@ -1021,24 +994,21 @@ toggleecho ()
 { if (replaying) return;
   logging = !logging;
   if (logging)
-  { if ((fecho = wopen (ROGUELOG, "w")) == NULL)
-    { logging = !logging;
+  {
+    if (! rogue_log_open (ROGUELOG))
+    {
+      logging = !logging;
       saynow ("can't open %s", ROGUELOG);
     }
     else
-    { fprintf (fecho, "Rogomatic Game Log\n\n"); 
+    {
       saynow ("Logging to file %s", ROGUELOG);
-      cecho = 1;
       if (*versionstr) command (T_OTHER, "v");
     }
   }
   else
-  { if (cecho)
-      fprintf (fecho, "\n");
-    else
-      fprintf (fecho, "\"\n");
-    fclose (fecho);
-
+  {
+    rogue_log_close ();
     if (playing) saynow ("File %s closed", ROGUELOG);
   }
   if (playing)
@@ -1118,157 +1088,6 @@ FILE *f;
   fprintf (f, "\n");
   putn ('-', f, 79);
   fprintf (f, "\n");
-}
-
-/*
- * getlogtoken: routine to retrieve a rogue token from the log file. 
- * This allows us to replay a game with all the diagnostic commands of
- * Rog-O-Matic at our disposal.					LGCH.
- */
-
-int getlogtoken()
-{ int acceptline;
-  int ch = GETLOGCHAR;
-  int ch1, ch2, dig;
-
-  while (ch == NEWLINE)
-    { acceptline = 0;
-      if ((ch = GETLOGCHAR) == 'R')
-        if ((ch = GETLOGCHAR) == ':')
-          if ((ch = GETLOGCHAR) == ' ')
-            { ch = GETLOGCHAR;
-              acceptline = 1;
-            }
-      if (!acceptline)
-        while ((int) ch != NEWLINE && (int) ch != EOF)
-          ch = GETLOGCHAR;
-    }
-
-  if (ch == '{')
-    { ch1 = GETLOGCHAR;
-      ch2 = GETLOGCHAR;
-      ch = GETLOGCHAR;   /* Ignore the closing '}' */
-      debuglog ("getlogtoken : {%c%c%c\n", ch1, ch2, ch);
-      switch (ch1)
-        {
-          case 'b': ch = BS_TOK; break;
-          case 'c':
-            switch (ch2)
-              {
-                case 'e': ch = CE_TOK; break;
-                case 'm':
-                  ch = CM_TOK;
-                  number1 = 0;
-                  while ((dig = GETLOGCHAR) != ',')
-                    { number1 = number1 * 10 + dig - '0';
-                    }
-                  number2 = 0;
-                  while ((dig = GETLOGCHAR) != ')')
-                    { number2 = number2 * 10 + dig - '0'; }
-                  GETLOGCHAR;		/* Ignore '}' */
-                  break;
-                case 'r': ch = CR_TOK; break;
-                case 'h':
-                  ch = CH_TOK;
-                  number1 = 0;
-                  while ((dig = GETLOGCHAR) != ',')
-                    { number1 = number1 * 10 + dig - '0';
-                    }
-                  number2 = 0;
-                  while ((dig = GETLOGCHAR) != ')')
-                    { number2 = number2 * 10 + dig - '0'; }
-                  GETLOGCHAR;		/* Ignore '}' */
-                  break;
-                case 'b': ch = CB_TOK; break;
-              }
-            break;
-            //      case 'd': ch = DO_TOK; break;
-          case 'f': ch = CL_TOK; break;
-          case 'h': ch = HM_TOK; break;
-          case 'l': ch = LF_TOK; break;
-          case 'n':
-            switch (ch2)
-              {
-                case 'd':
-                  ch = ND_TOK;
-                  number1 = 0;
-                  while ((dig = GETLOGCHAR) != ')')
-                    { number1 = number1 * 10 + dig - '0';
-                    }
-                  GETLOGCHAR;		/* Ignore '}' */
-                  break;
-                case 'u':
-                  ch = NU_TOK;
-                  number1 = 0;
-                  while ((dig = GETLOGCHAR) != ')')
-                    { number1 = number1 * 10 + dig - '0';
-                    }
-                  GETLOGCHAR;		/* Ignore '}' */
-                  break;
-                case 'r':
-                  ch = NR_TOK;
-                  number1 = 0;
-                  while ((dig = GETLOGCHAR) != ')')
-                    { number1 = number1 * 10 + dig - '0';
-                    }
-                  GETLOGCHAR;		/* Ignore '}' */
-                  break;
-                case 'l':
-                  ch = NL_TOK;
-                  number1 = 0;
-                  while ((dig = GETLOGCHAR) != ')')
-                    { number1 = number1 * 10 + dig - '0';
-                    }
-                  GETLOGCHAR;		/* Ignore '}' */
-                  break;
-              }
-            break;
-          case 's':
-            switch (ch2)
-              {
-                case 'e': ch = SE_TOK; break;
-                case 'o': ch = SO_TOK; break;
-                case 'c': ch = SC_TOK; break;
-                case 'r': ch = SR_TOK; break;
-              }
-            break;
-          case 't': ch = TA_TOK; break;
-          case 'u': ch = UP_TOK; break;
-          case 'E':
-                    while (GETLOGCHAR != '}')
-                      ;
-                    ch = ER_TOK;
-                    break;
-        }
-    }
-  else
-    {
-      debuglog ("getlogtoken ch = '%c' '%d'\n", ch, ch);
-    }
-
-  return (ch);
-}
-
-/*
- * getoldcommand: retrieve the old command from a logfile we are replaying.
- */
-
-getoldcommand (s)
-register char *s;
-{ register int charcount = 0;
-  char ch = ' ', term = '"', *startpat = "\nC: ";
-
-  while (*startpat && (int) ch != EOF)
-  { if ((ch = GETLOGCHAR) != *(startpat++)) startpat = "\nC: "; }
-
-  if ((int) ch != EOF)
-  { term = ch = GETLOGCHAR;
-    while ((ch = GETLOGCHAR) != term && (int) ch != EOF && charcount++ < 128)
-    { *(s++) = ch;
-    }
-  }
-
-  *s = '\0';
 }
 
 /*

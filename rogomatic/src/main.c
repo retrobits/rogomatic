@@ -110,7 +110,6 @@ FILE *rogo_openlog (char *genelog);
 /* global data - see globals.h for current definitions */
 
 /* Files */
-FILE  *fecho=NULL;		/* Game record file 'echo' option */
 FILE  *logfile=NULL;		/* File for score log */
 FILE  *realstdout=NULL;		/* Real stdout for Emacs, terse mode */
 FILE  *snapshot=NULL;		/* File for snapshot command */
@@ -149,7 +148,6 @@ int   beingstalked = 0;		/* True if recently hit by inv. stalker */
 int   blinded = 0;		/* True if blinded */
 int   blindir = 0;		/* Last direction we moved when blind */
 int   cancelled = 0;		/* True ==> recently zapped w/cancel */
-int   cecho = 0;		/* Last kind of message to echo file */
 int   cheat = 0;		/* True ==> cheat, use bugs, etc. */
 int   checkrange = 0;           /* True ==> check range */
 int   chicken = 0;		/* True ==> check run away code */
@@ -465,32 +463,18 @@ char *argv[];
     if (!replaying)
       while ((int) (ch = getroguetoken ()) != CL_TOK && (int) ch != EOF)
         {
-          debuglog ("main : got '%c' from getroguetoken\n",ch);
-          /* The rogue port seeme to randomly add a --More-- to the
-           * version string sometimes which causes this to block waiting
-           * for input from the rogue process, so send a space to clear
-           * the --More--, then continue - NYM
-           */
-/*          if (ch == *m)
-            {
-              if (*++m == '\0')
-                {
-                  debuglog ("main : got '--More--' in Version check\n");
-                  sendnow (" ");
-                }
-            }
-          else m = "More--";
- */
+          /* FIXME: If you start next to a monster this will get stuck, as
+             pressing 'v' takes time in version 3.6, so rogue will be waiting
+             for input and we will be waiting for rogue to print a CL_TOK,
+             so deadlock - NYM */
         }
   }
 
-  /* 
+  /*
    * Note: If we are replaying, the logfile is now in synch
    */
-  debuglog ("main : getrogue (%s, 2)\n",ill);
-
   getrogue (ill, 2);  /* Read the input up to end of first command */
-  
+
   /* Identify all 26 monsters */
   if (!replaying)
     for (ch = 'A'; ch <= 'Z'; ch++) rogo_send ("/%c", ch);
@@ -512,28 +496,24 @@ char *argv[];
     interrupted = 0;
     transparent = 1;
   }
-  
+
   if (transparent) noterm = 0;
 
-  debuglog ("main : entering playing loop\n");
   while (playing) 
   { refresh ();
 
-    debuglog ("main : send commands\n");
     /* If we have any commands to send, send them */
     while (resend ())
     { if (startingup) showcommand (lastcmd);
       sendnow (";");
-      debuglog ("main : getrogue (\"%s\", 2)\n",ill);
       getrogue (ill, 2);
     }
-    
+
     if (startingup)		/* All monsters identified */
     { versiondep ();			/* Do version specific things */
       startingup = 0;			/* Clear starting flag */
     }
-    
-    debuglog ("main : check dead?\n");
+
     if (!playing) break;	/* In case we died */
 
     /*
@@ -545,9 +525,8 @@ char *argv[];
      * quit command.
      */
 
-    debuglog ("main : strategize\n");
     if ((transparent && !singlestep) ||
-	(!emacs && charsavail ()) ||
+        (!emacs && charsavail ()) ||
         !strategize())
     { ch = (noterm) ? ROGQUIT : getch ();
 
@@ -569,11 +548,11 @@ char *argv[];
 
         case 'f': ch = getch ();
                   for (s = "hjklyubnHJKLYUBN"; *s; s++)
-                  { if (ch == *s)
-                    { if (version < RV53A) command (T_OTHER, "f%c", ch); 
-		      else                 command (T_OTHER, "%c", ctrl (ch)); 
-		    }
-                  }
+                    { if (ch == *s)
+                        { if (version < RV53A) command (T_OTHER, "f%c", ch);
+                          else                 command (T_OTHER, "%c", ctrl (ch)); 
+                        }
+                    }
                   transparent = 1; break;
 
         case '\f':  redrawscreen (); break;
@@ -712,8 +691,6 @@ char *argv[];
     { singlestep = 0;
     }
   }
-  
-  debuglog ("main : done playing %d\n",playing);
 
   if (! replaying)
   { saveltm (Gold);			/* Save new long term memory */
@@ -726,7 +703,7 @@ char *argv[];
 //  clear ();
   refresh ();
   endwin (); nocrmode (); noraw (); echo ();
-  
+
   if (emacs)  
   { if (*sumline) fprintf (realstdout, " %s", sumline);
   }
@@ -761,6 +738,7 @@ char *argv[];
       printf ("Log file left on %s\n", ROGUELOG);
   }
 
+  close_frogue_debuglog ();
   debuglog_close ();
 
   exit (0);
@@ -774,7 +752,6 @@ char *argv[];
 
 void onintr (int sig)
 { sendnow ("n\033");            /* Tell Rogue we don't want to quit */
-  if (logging) fflush (fecho);  /* Print out everything */
   refresh ();                   /* Clear terminal output */
   clearsendqueue ();            /* Clear command queue */
   setnewgoal ();                /* Don't believe ex */

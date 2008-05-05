@@ -62,7 +62,7 @@
  * not be used unless RGMDIR is also defined.
  */
 
-# define LOCKFILE	"/Users/molinaro/Desktop/roguelikes/rogo1/rlog/RgmLock"
+# define LOCKFILE	"./rlog/RgmLock"
 
 /* 
  * This variable is the level at which we always start logging the game
@@ -133,7 +133,7 @@
  * directory.
  */
 
-# define RGMDIR		"/Users/molinaro/Desktop/roguelikes/rogo1/rlog"
+# define RGMDIR		"./rlog"
 
 /* 
  * This file is created in the current directory if the snapshot command

@@ -27,6 +27,10 @@
 #include "termtokens.h"
 #include "getroguetoken.h"
 
+FILE *logfile;		/* Rogomatic score file */
+int logging;		/* True if logging game */
+int replaying;		/* True if replaying old game */
+
 static char screen00 = ' ';
 
 int   atrow  = 0;
@@ -199,17 +203,11 @@ getrogue
             fprintf (stderr, "CR_TOK [%d, %d]\n",row,col);
             break;
 
-          case DO_TOK:
-            row++;
-            fprintf (stderr, "DO_TOK [%d, %d]\n",row,col);
-            break;
-
           case ER_TOK: 
             break;
 
           case LF_TOK:
             row++;
-//            col = 0;
             fprintf (stderr, "LF_TOK [%d, %d]\n",row,col);
             break;
 
@@ -386,17 +384,6 @@ int main (int argc, char *argv[])
         case CR_TOK:
           col = 0;
           printf ("CR_TOK      [%2d, %2d] [%c]\n", row, col, screen[row][col]);
-//          printit = 1;
-          break;
-
-        case DO_TOK:
-          row++;
-          if (row > s_row2)
-            {
-              printf ("DO_TOK      scroll up\n");
-              scrollup ();
-            }
-          printf ("DO_TOK      [%2d, %2d] [%c]\n", row, col, screen[row][col]);
 //          printit = 1;
           break;
 
