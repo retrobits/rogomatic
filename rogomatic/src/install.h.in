@@ -62,7 +62,7 @@
  * not be used unless RGMDIR is also defined.
  */
 
-# define LOCKFILE	"./rlog/RgmLock"
+# define LOCKFILE	"@prefix@/var/@PACKAGE@/RgmLock"
 
 /* 
  * This variable is the level at which we always start logging the game
@@ -98,7 +98,7 @@
  * directory).
  */
 
-# define PLAYER		"/usr/src/Games/Rogue/RogOMatic/player"
+# define PLAYER		"@prefix@/bin/player"
 
 /* 
  * This is the version of the "current" Rog-O-Matic, and is an uppercase
@@ -133,7 +133,7 @@
  * directory.
  */
 
-# define RGMDIR		"./rlog"
+# define RGMDIR		"@prefix@/var/@PACKAGE@/"
 
 /* 
  * This file is created in the current directory if the snapshot command
