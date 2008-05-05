@@ -867,7 +867,6 @@ trywand ()
   if (dir > 7) return (0);
 
   /* Set to do a reset inventory (usesynch) and point the wand */
-  debuglog ("tactics : trywand : usesynch = 0\n");
   usesynch = 0;  
   return (point (obj, dir));
 }

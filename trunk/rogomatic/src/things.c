@@ -47,7 +47,6 @@ int obj;
   if (cursedarmor) return (0);
 
   command (T_HANDLING, "W%c", LETTER (obj));
-  debuglog ("things : wear : usesynch = 0\n");
   usesynch = 0;
   return (1);
 }
@@ -66,7 +65,6 @@ takeoff ()
   if (cursedarmor) return (0);
 
   command (T_HANDLING, "T");
-  debuglog ("things : takeoff : usesynch = 0\n");
   usesynch = 0;
   return (1);
 }
@@ -150,8 +148,6 @@ int obj;
 {
   if (inven[obj].type != potion)
   { dwait (D_ERROR, "Trying to quaff %c", LETTER (obj)); 
-
-    debuglog ("things : quaff : usesynch = 0\n");
     usesynch = 0;
     return (0); 
   }
@@ -169,7 +165,6 @@ int obj;
 {
   if (inven[obj].type != Scroll)
   { dwait (D_ERROR, "Trying to read %c", LETTER (obj)); 
-    debuglog ("things : reads : usesynch = 0\n");
     usesynch = 0;
     return (0); 
   }
@@ -263,7 +258,6 @@ addstuff (ch, row, col)
 char  ch;
 int   row, col;
 { /* if (seerc ('@', row, col)) return (0); */ /* Removed MLM 10/28/83 */
-  debuglog ("things : addstuff ('%c') at %d, %d\n",ch, row, col);
   if (onrc (STUFF, row, col))
     deletestuff (row, col);
   slist[slistlen].what = translate[ch];
@@ -280,7 +274,6 @@ int   row, col;
 deletestuff (row, col)
 int   row, col;
 { register int   i;
-  debuglog ("things : deletestuff () at %d, %d\n",row, col);
   unsetrc (STUFF, row, col);
   for (i = 0; i < slistlen; ++i)
     if (slist[i].scol == col && slist[i].srow == row)
@@ -321,11 +314,8 @@ char *s;
 prepareident (obj, iscroll)
 int obj, iscroll;
 {
-  debuglog ("things : prepareident (%d, %d)\n",obj,iscroll); 
-  debuglog ("things : afterid %d\n",afterid); 
   nextid = LETTER (obj);
   afterid = (iscroll > obj || inven[iscroll].count > 1) ? nextid : nextid-1;
-  debuglog ("things : afterid %d\n",afterid); 
   return (nextid >= 'a' && afterid >= 'a');
 }
 

@@ -569,7 +569,6 @@ plusweapon ()
   cursedweapon = 0;
   newweapon = 1;
   forget (currentweapon, CURSED);
-  debuglog ("arms : plusweapon : usesynch = 0\n");
   usesynch = 0;
 }
 

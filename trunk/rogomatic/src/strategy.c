@@ -868,7 +868,6 @@ int adj;		/* How many attackers are there? */
       mdir != NONE && on(ROOM) && mdist < 6 &&
       ((obj = unknown (wand)) != NONE) && point (obj, mdir))
   {
-    debuglog ("strategy : battlestations : usesynch = 0\n");
     usesynch = 0;
     /* zappedunknown = TRUE; */		/* DR UTexas  19 Jan 84 */
     return (1);

@@ -62,7 +62,6 @@ newlevel ()
   foundarrowtrap = foundtrapdoor = 0;   /* Old traps are gone */
   teleported = 0;			/* Not teleported yet */
   attempt = 0;				/* Haven't search for doors yet */
-  debuglog ("rooms : newlevel : usesynch = 0\n");
   usesynch = 0;				/* Force a new inventory */
   compression = Level < 13;		/* Set move compression */
   newarmor = newweapon = newring = 1;	/* Reevaluate our items */

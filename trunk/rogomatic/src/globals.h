@@ -29,7 +29,6 @@
 
 /* global files */
 extern FILE *trogue;	/* From Rogue, To Rogue */
-extern FILE *fecho;		/* Rogomatic score file */
 extern FILE *logfile;		/* Rogomatic score file */
 extern FILE *realstdout;	/* Real stdout when in terse or emacs mode */
 extern FILE *snapshot;		/* File for snapshot command */
@@ -74,7 +73,6 @@ extern int beingstalked;	/* True if an Invisible Stalker is around */
 extern int blinded;		/* True if blinded */
 extern int blindir;		/* Last direction we moved when blind */
 extern int cancelled;		/* Turns till use cancellation again */
-extern int cecho;		/* Last message type to logfile */
 extern int cheat;		/* True ==> cheat to win */
 extern int checkrange;		/* True ==> check range */
 extern int chicken;		/* True ==> test run away code */
