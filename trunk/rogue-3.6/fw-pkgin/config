@@ -1,12 +1,12 @@
 # The FW_PACKAGE_MAINTAINER field is populated with the 
 # environment variable FW_PACKAGE_DEFAULT_MAINTAINER if non-empty
 
-FW_PACKAGE_NAME="rogue-3.6"
+FW_PACKAGE_NAME="rogue"
 FW_PACKAGE_VERSION="3.6.4"
 FW_PACKAGE_MAINTAINER="molinaro <molinaro@molinaro-maclt.local>"
 FW_PACKAGE_SHORT_DESCRIPTION="Rogue 3.6"
 FW_PACKAGE_DESCRIPTION=`cat README`
-FW_PACKAGE_ARCHITECTURE_DEPENDENT="1"
+FW_PACKAGE_ARCHITECTURE_DEPENDENT="0"
 
 # Dependency information.  The native syntax corresponds to Debian,
 # http://www.debian.org/doc/debian-policy/ch-relationships.html

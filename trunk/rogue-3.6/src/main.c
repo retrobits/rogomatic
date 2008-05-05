@@ -61,7 +61,7 @@ char **envp;
     strncpy(home, md_gethomedir(), PATH_MAX);
 
     strcpy(file_name, home);
-    strcat(file_name, "rogue36.sav");
+    strcat(file_name, "/rogue36.sav");
 
     if ((env = getenv("ROGUEOPTS")) != NULL)
 	parse_opts(env);
@@ -84,13 +84,14 @@ char **envp;
 
     time(&now);
     lowtime = (int) now;
-    dnum = (wizard && getenv("SEED") != NULL ?
+/*    dnum = (wizard && getenv("SEED") != NULL ? */
+    dnum = (getenv("SEED") != NULL ?
 	atoi(getenv("SEED")) :
 	lowtime + getpid());
     if (wizard)
 	printf("Hello %s, welcome to dungeon #%d", whoami, dnum);
     else
-	printf("Hello %s, just a moment while I dig the dungeon...", whoami);
+	printf("Hello %s, just a moment while I dig the dungeon #%d...", whoami, dnum);
     fflush(stdout);
     seed = dnum;
     init_player();			/* Roll up the rogue */
