@@ -2,7 +2,7 @@
 # environment variable FW_PACKAGE_DEFAULT_MAINTAINER if non-empty
 
 FW_PACKAGE_NAME="rogue"
-FW_PACKAGE_VERSION="3.6.4"
+FW_PACKAGE_VERSION="3.6.3-rgm"
 FW_PACKAGE_MAINTAINER="molinaro <molinaro@molinaro-maclt.local>"
 FW_PACKAGE_SHORT_DESCRIPTION="Rogue 3.6"
 FW_PACKAGE_DESCRIPTION=`cat README`
