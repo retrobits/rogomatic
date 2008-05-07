@@ -82,9 +82,9 @@ char *argv[];
   }
 
   /* No file argument, assign the gene log and pool file names */
-  sprintf (genelock, "%s/GeneLock%d", RGMDIR, version);
-  sprintf (genelog, "%s/GeneLog%d", RGMDIR, version);
-  sprintf (genepool, "%s/GenePool%d", RGMDIR, version);
+  sprintf (genelock, "%s/GeneLock%d", getRgmDir (), version);
+  sprintf (genelog, "%s/GeneLog%d", getRgmDir (), version);
+  sprintf (genepool, "%s/GenePool%d", getRgmDir (), version);
 
   critical ();				/* Disable interrupts */
   if (lock_file (genelock, MAXLOCK))

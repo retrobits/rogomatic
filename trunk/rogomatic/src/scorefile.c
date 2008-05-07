@@ -60,8 +60,8 @@ int ntrm;
   char  newfil[100];
   FILE *newlog;
 
-  sprintf (lokfil, "%s %s", LOCKFILE, vers);
-  sprintf (newfil, "%s/rgmdelta%s", RGMDIR, vers);
+  sprintf (lokfil, "%s %s", getLockFile (), vers);
+  sprintf (newfil, "%s/rgmdelta%s", getRgmDir (), vers);
 
   /* Defer interrupts while mucking with the score file */
   critical ();
@@ -109,10 +109,10 @@ char *vers;
   int   oldmask, intrupscore ();
 
   sprintf (lokfil, "%s %s", LOCKFILE, vers);
-  sprintf (scrfil, "%s/rgmscore%s", RGMDIR, vers);
-  sprintf (delfil, "%s/rgmdelta%s", RGMDIR, vers);
-  sprintf (newfil, "%s/NewScore%s", RGMDIR, vers);
-  sprintf (allfil, "%s/AllScore%s", RGMDIR, vers);
+  sprintf (scrfil, "%s/rgmscore%s", getRgmDir (), vers);
+  sprintf (delfil, "%s/rgmdelta%s", getRgmDir (), vers);
+  sprintf (newfil, "%s/NewScore%s", getRgmDir (), vers);
+  sprintf (allfil, "%s/AllScore%s", getRgmDir (), vers);
 
   /* On interrupts we must relinquish control of the score file */
   int_exit (intrupscore);

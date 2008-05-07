@@ -767,9 +767,9 @@ void onintr (int sig)
  */
 
 startlesson ()
-{ sprintf (genelog, "%s/GeneLog%d", RGMDIR, version);
-  sprintf (genepool, "%s/GenePool%d", RGMDIR, version);
-  sprintf (genelock, "%s/GeneLock%d", RGMDIR, version);
+{ sprintf (genelog, "%s/GeneLog%d", getRgmDir (), version);
+  sprintf (genepool, "%s/GenePool%d", getRgmDir (), version);
+  sprintf (genelock, "%s/GeneLock%d", getRgmDir (), version);
 
   rogo_srand (0);				/* Start random number generator */
   critical ();				/* Disable interrupts */

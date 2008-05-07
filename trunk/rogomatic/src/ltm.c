@@ -117,7 +117,7 @@ int score;
   critical ();
 
   /* Only write out the new results if we can get write access */
-  if (lock_file (LOCKFILE, MAXLOCK))
+  if (lock_file (getLockFile (), MAXLOCK))
   { if ((ltmfil = wopen (ltmnam, "w")) == NULL)
     { dwait (D_WARNING, "Can't write long term memory file '%s'...", ltmnam); }
     else
@@ -140,7 +140,7 @@ int score;
       /* Close the file and unlock it */  
       fclose (ltmfil);
     }
-    unlock_file (LOCKFILE);
+    unlock_file (getLockFile ());
   }
   
   /* Re-enable interrupts */
@@ -153,7 +153,7 @@ int score;
 
 restoreltm ()
 {
-  sprintf (ltmnam, "%s/ltm%d", RGMDIR, version);
+  sprintf (ltmnam, "%s/ltm%d", getRgmDir (), version);
   dwait (D_CONTROL, "Restoreltm called, reading file '%s'", ltmnam);
 
   clearltm (monhist);			/* Clear the original sums */
@@ -164,7 +164,7 @@ restoreltm ()
   critical ();
 
   /* Only read the long term memory if we can get access */
-  if (lock_file (LOCKFILE, MAXLOCK))
+  if (lock_file (getLockFile (), MAXLOCK))
   { if (fexists (ltmnam))
       readltm ();
     else 
@@ -174,7 +174,7 @@ restoreltm ()
       ltm.inittime = time (0);
     }
 
-    unlock_file (LOCKFILE);
+    unlock_file (getLockFile ());
   }
   else
   { saynow ("Warning: could not lock long term memory file!");    

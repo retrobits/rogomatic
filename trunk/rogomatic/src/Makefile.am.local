@@ -17,6 +17,7 @@ bin_PROGRAMS = \
 player_SOURCES = \
   arms.c         \
   command.c      \
+  config.c       \
   database.c     \
   debug.c        \
   explore.c      \
@@ -44,8 +45,10 @@ player_SOURCES = \
   debuglog.c
 
 rogomatic_SOURCES = \
-  setup.c           \
+  config.c          \
+  debuglog.c        \
   findscore.c       \
+  setup.c           \
   scorefile.c       \
   utility.c
 
@@ -68,6 +71,8 @@ histplot_SOURCES = \
   utility.c
 
 gene_SOURCES = \
+  config.c     \
+  debuglog.c   \
   gene.c       \
   rand.c       \
   learn.c      \
