@@ -1084,6 +1084,7 @@ md_readchar()
     int mode = M_NORMAL;
     int mode2 = M_NORMAL;
 
+#if defined(_WIN32)
     for(;;)
     {
 	ch = getch();
@@ -1314,6 +1315,19 @@ md_readchar()
     raw();
 
     return(ch & 0x7F);
+#else
+
+    ch = getch();
+
+    switch(ch)
+      {
+        #ifdef KEY_BACKSPACE /* NCURSES in Keypad mode sends this for Ctrl-H */
+                    case KEY_BACKSPACE: ch = CTRL('H'); break;
+        #endif
+      }
+
+    return (ch);
+#endif
 }
 
 #if defined(LOADAV) && defined(HAVE_NLIST_H) && defined(HAVE_NLIST)
