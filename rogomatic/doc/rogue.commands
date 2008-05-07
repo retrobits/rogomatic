@@ -1,0 +1,49 @@
+3.6.3
+?       prints help                     s       search for trap/secret door
+/       identify object                         (space) rest for a while
+h       left                            i       inventory
+j       down                            I       inventory single item
+k       up                              q       quaff potion
+l       right                           r       read paper
+y       up & left                       e       eat food
+u       up & right                      w       wield a weapon
+b       down & left                     W       wear armor
+n       down & right                    T       take armor off
+H       run left                        P       put on ring
+J       run down                        R       remove ring
+K       run up                          d       drop object
+L       run right                       c       call object
+Y       run up & left                   o       examine/set options
+U       run up & right                  ^L      redraw screen
+B       run down & left                 ^R      repeat last message
+N       run down & right                ^[      cancel command
+t<dir>  throw something                 v       print program version number
+f<dir>  forward until find something    !       shell escape
+p<dir>  zap a wand in a direction       S       save game
+z       zap a wand or staff             Q       quit
+>       go down a staircase
+
+5.4.4
+?       prints help                     I       inventory single item
+/       identify object                 q       quaff potion
+h       left                            r       read scroll
+j       down                            e       eat food
+k       up                              w       wield a weapon
+l       right                           W       wear armor
+y       up & left                       T       take armor off
+u       up & right                      P       put on ring
+b       down & left                     R       remove ring
+n       down & right                    d       drop object
+        <SHIFT><dir>: run that way      c       call object
+        <CTRL><dir>: run till adjacent  a       repeat last command
+f<dir>  fight till death or near death  )       print current weapon
+t<dir>  throw something                 ]       print current armor
+m<dir>  move onto without picking up    =       print current rings
+z<dir>  zap a wand in a direction       @       print current stats
+^<dir>  identify trap type              D       recall what's been discovered
+s       search for trap/secret door     o       examine/set options
+>       go down a staircase             ^R      redraw screen
+<       go up a staircase               ^P      repeat last message
+.       rest for a turn                 ^[      cancel command
+,       pick something up               S       save game
+i       inventory                       Q       quit
