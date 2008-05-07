@@ -138,7 +138,7 @@ clean:
 	$(RM) core a.exe a.out a.exe.stackdump $(PROGRAM) $(PROGRAM).exe
 	$(RM) $(PROGRAM).tar $(PROGRAM).tar.gz $(PROGRAM).zip 
 	$(RM) $(DISTNAME)/*
-	-rmdir $(DISTNAME)
+	-if test -d $(DISTNAME) ; then rmdir $(DISTNAME) ; fi
     
 maintainer-clean:
 	$(RM) config.h

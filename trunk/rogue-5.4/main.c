@@ -57,7 +57,8 @@ main(int argc, char **argv, char **envp)
         strucpy(whoami, md_getusername(), (int) strlen(md_getusername()));
     lowtime = (int) time(NULL);
 #ifdef MASTER
-    if (wizard && getenv("SEED") != NULL)
+//    if (wizard && getenv("SEED") != NULL)
+    if (getenv("SEED") != NULL)
 	dnum = atoi(getenv("SEED"));
     else
 #endif
@@ -109,7 +110,7 @@ main(int argc, char **argv, char **envp)
 	printf("Hello %s, welcome to dungeon #%d", whoami, dnum);
     else
 #endif
-	printf("Hello %s, just a moment while I dig the dungeon...", whoami);
+	printf("Hello %s, just a moment while I dig the dungeon #%d...", whoami,dnum);
     fflush(stdout);
 
     initscr();				/* Start up cursor package */

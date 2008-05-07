@@ -15,17 +15,11 @@
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #undef HAVE_ARPA_INET_H
 
-/* Define to 1 if libcurses is requested */
-#undef HAVE_CURSES_H
-
 /* Define to 1 if you don't have `vprintf' but do have `_doprnt.' */
 #undef HAVE_DOPRNT
 
 /* Define to 1 if you have the `erasechar' function. */
 #undef HAVE_ERASECHAR
-
-/* Define if ncurses has ESCDELAY variable */
-#undef HAVE_ESCDELAY
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
@@ -54,6 +48,9 @@
 /* Define to 1 if you have the `killchar' function. */
 #undef HAVE_KILLCHAR
 
+/* Define to 1 if you have the `curses' library (-lcurses). */
+#undef HAVE_LIBCURSES
+
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
 
@@ -69,9 +66,6 @@
 
 /* Define to 1 if you have the `memset' function. */
 #undef HAVE_MEMSET
-
-/* Define to 1 if libncurses is requested */
-#undef HAVE_NCURSES_H
 
 /* Define to 1 if you have the <ncurses/term.h> header file. */
 #undef HAVE_NCURSES_TERM_H

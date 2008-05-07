@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.56)
-AC_INIT([Rogue],[5.4.4], [yendor@rogueforge.net])
+AC_INIT([Rogue],[5.4.4-rgm], [yendor@rogueforge.net])
 AC_CONFIG_SRCDIR([armor.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES([Makefile rogue.6 rogue.cat rogue.doc rogue.html rogue.me])
@@ -23,7 +23,9 @@ AC_C_CONST
 AC_TYPE_UID_T
 AC_TYPE_SIZE_T
 AC_STRUCT_TM
-MP_WITH_CURSES
+# MP_WITH_CURSES
+AC_CHECK_LIB(curses, initscr, , AC_MSG_ERROR([Cannot find ncurses]))
+
 # Checks for library functions.
 AC_FUNC_FORK
 AC_PROG_GCC_TRADITIONAL
