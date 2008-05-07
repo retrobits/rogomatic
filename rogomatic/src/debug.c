@@ -58,7 +58,7 @@ int msgtype, a1, a2, a3, a4, a5, a6, a7, a8;
   if (!replaying && (msgtype & (D_FATAL | D_ERROR | D_WARNING)))
   { char errfn[128]; FILE *errfil;
 
-    sprintf (errfn, "%s/error%s", RGMDIR, versionstr);
+    sprintf (errfn, "%s/error%s", getRgmDir (), versionstr);
     if ((errfil = wopen (errfn, "a")) != NULL)
     { fprintf (errfil, "User %s, error type %d:  %s\n\n",
                getname(), msgtype, msg);
