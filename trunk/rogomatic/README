@@ -8,7 +8,7 @@ nights figuring out old C language idioms and swapping out the rogue
 pseudo-terminal code with a vt100 evaluator, I was able to get it to
 run.
 
-I emailed M. Mauldin and got permission to rerelease this under GPLv2.
+I emailed M. Mauldin and got permission to rerelease this under GPLv3.
 
 The software is packaged as a GNU autoconf/automake/libtool package
 using framewerk (http://code.google.com/p/fwtemplates/)
